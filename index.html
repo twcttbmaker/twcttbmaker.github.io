@@ -91,8 +91,9 @@
             border-radius: 4px;
             display: inline-block;
         }
+        /* 課名，用普通字重，font-size 跟住 cell 設定 */
         .course-title {
-            font-weight: 600;
+            font-weight: 400;
         }
     </style>
 </head>
@@ -291,7 +292,7 @@
                     <div id="ttb-bg-layer" style="opacity:0.3;"></div>
                     <div id="ttb-content-layer" style="transform: translateY(140px);">
                         <div class="flex justify-center items-center h-full text-gray-400">
-                            <p>Your timetable will be displayed here。</p>
+                            <p>Your timetable will be displayed here.</p>
                         </div>
                     </div>
                 </div>
@@ -789,7 +790,7 @@ REGISTERED
                         el.style.fontSize = style.fontSize;
                         el.style.lineHeight = style.lineHeight;
                         el.style.fontFamily = style.fontFamily;
-                        el.style.fontWeight = '600';
+                        el.style.fontWeight = '400';
                     });
                 }
             });
