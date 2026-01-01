@@ -1,344 +1,486 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TWC Timetable Generator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RLM9VCQ389"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-RLM9VCQ389');
-    </script>
-    <style>
-        body {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
-        }
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        .timetable-dark ::-webkit-scrollbar-track {
-            background: #2d3748;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        .timetable-cell {
-            border-right: 1px solid;
-            border-bottom: 1px solid;
-        }
-        /* 9:16 預覽容器 */
-        #preview-9-16-wrapper {
-            position: relative;
-            margin: 0 auto;
-            height: 70vh;
-            max-height: 900px;
-            width: calc(70vh * 9 / 16);
-            max-width: 450px;
-            background-color: #ffffff;
-            border-radius: 1rem;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        @media (min-height: 900px) {
-            #preview-9-16-wrapper {
-                height: 900px;
-                width: calc(900px * 9 / 16);
-            }
-        }
-        #timetable-container {
-            position: relative;
-            transform-origin: left top;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: #ffffff;
-        }
-        #ttb-bg-layer {
-            position: absolute;
-            inset: 0;
-            background-size: 100%;
-            background-position: 50% 50%;
-            background-repeat: no-repeat;
-            pointer-events: none;
-            z-index: 0;
-        }
-        #ttb-content-layer {
-            position: relative;
-            z-index: 1;
-        }
-        .bg-draggable {
-            cursor: move;
-        }
-        .time-label-inner.white-bg {
-            background-color: #ffffff;
-            padding: 0 4px;
-            border-radius: 4px;
-            display: inline-block;
-        }
-        /* 課名，用普通字重，font-size 跟住 cell 設定 */
-        .course-title {
-            font-weight: 400;
-        }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800 transition-colors duration-300">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TWC Timetable Generator</title>
 
-<div class="container mx-auto p-4 md:p-6">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RLM9VCQ389"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag("js", new Date());
+    gtag("config", "G-RLM9VCQ389");
+  </script>
+
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: #f3f4f6;
+      color: #1f2937;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .timetable-dark ::-webkit-scrollbar-track {
+      background: #2d3748;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .timetable-cell {
+      border-right: 1px solid;
+      border-bottom: 1px solid;
+    }
+
+    .preview-9-16-wrapper {
+      position: relative;
+      margin: 0 auto;
+      height: 70vh;
+      max-height: 900px;
+      width: calc(70vh * 9 / 16);
+      max-width: 450px;
+      background-color: #ffffff;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (min-height: 900px) {
+      .preview-9-16-wrapper {
+        height: 900px;
+        width: calc(900px * 9 / 16);
+      }
+    }
+
+    .timetable-container {
+      position: relative;
+      transform-origin: left top;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: #ffffff;
+    }
+
+    .ttb-bg-layer {
+      position: absolute;
+      inset: 0;
+      background-size: 100%;
+      background-position: 50% 50%;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ttb-content-layer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .bg-draggable {
+      cursor: move;
+    }
+
+    .time-label-inner.white-bg {
+      background-color: #ffffff;
+      padding: 0 4px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 transition-colors duration-300">
+  <div class="container mx-auto p-4 md:p-6">
     <header class="text-center mb-4">
-        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">TWC Timetable Generator</h1>
-        <p class="text-sm md:text-base text-gray-600 mt-2">Paste your course data to generate a weekly schedule.</p>
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+        TWC Timetable Generator
+      </h1>
+      <p class="text-sm md:text-base text-gray-600 mt-2">
+        Paste your course data to generate a weekly schedule.
+      </p>
     </header>
 
-    <!-- 綠色 Box -->
+    <!-- Box -->
     <div class="bg-green-100 border-l-4 border-green-500 text-green-800 p-4 rounded-lg mb-4" role="alert">
-        <p class="text-sm">
-            唔想再排隊問轉唔轉到？TWC credit transfer database 幫你一次過睇晒 🔥
-            <a href="https://docs.google.com/forms/d/1s-3uCpULAi-c1pglPKG__3amMSNAYvrTsVZSJuTHORI/viewform?edit_requested=true"
-               target="_blank"
-               class="underline font-semibold">
-                TWC credit transfer
-            </a>
-        </p>
+      <p class="text-sm">
+        TWC credit transfer database：
+        <a
+          href="https://docs.google.com/forms/d/1s-3uCpULAi-c1pglPKG3amMSNAYvrTsVZSJuTHORI/viewform?edit_requested=true"
+          target="_blank"
+          class="underline font-semibold"
+          >TWC credit transfer</a
+        >
+      </p>
     </div>
 
     <!-- Reminder -->
     <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-6" role="alert">
-        <p class="font-bold">Reminder: This generator works best on desktop.</p>
-        <p class="text-sm">On mobile, downloading images may fail. For the best experience, please use a computer.</p>
+      <p class="font-bold">Reminder: This generator works best on desktop.</p>
+      <p class="text-sm">
+        On mobile, downloading images may fail. For the best experience, please use a computer.
+      </p>
     </div>
 
     <div class="flex flex-col lg:flex-row gap-6">
-        <!-- 左欄：設定 -->
-        <div class="lg:w-1/2 flex flex-col gap-6">
-            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
-                <div class="flex flex-col gap-6">
-                    <!-- Step 1 -->
-                    <div class="flex flex-col gap-4">
-                        <h2 class="text-lg sm:text-xl font-semibold mb-2">1. Paste Timetable Data</h2>
-                        <p class="text-xs text-gray-500 mb-2">
-                            Go to:
-                            <a href="https://selfservice.twc.edu.hk/PowerCampusSelfService/Registration/Schedule" target="_blank" class="text-blue-600 hover:underline">
-                                Self-Service
-                            </a>
-                            &gt; List mode &gt; Ctrl+A &gt; Ctrl+C &gt; Paste below
-                        </p>
-                        <textarea id="timetable-data" rows="10" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-400"></textarea>
-                        <button id="generate-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
-                            Generate Timetable
-                        </button>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div>
-                        <h2 class="text-lg sm:text-xl font-semibold mb-2">2. Customize Appearance</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Theme -->
-                            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
-                                <label for="theme-toggle" class="text-sm font-medium">Timetable Theme</label>
-                                <button id="theme-toggle" class="px-4 py-2 rounded-lg text-sm font-medium bg-white shadow-sm">
-                                    <span class="light-mode-icon">🌙 Dark</span>
-                                    <span class="dark-mode-icon hidden">☀️ Light</span>
-                                </button>
-                            </div>
-                            <!-- Palette -->
-                            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
-                                <label for="color-palette" class="text-sm font-medium">Color Palette</label>
-                                <select id="color-palette" class="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
-                                    <option value="default">Default</option>
-                                    <option value="pastel">Pastel</option>
-                                    <option value="vintage">Vintage</option>
-                                    <option value="neon">Neon</option>
-                                    <option value="ocean">Ocean</option>
-                                    <option value="forest">Forest</option>
-                                    <option value="sunset">Sunset</option>
-                                    <option value="monochrome">Monochrome</option>
-                                    <option value="berry">Berry</option>
-                                    <option value="custom">custom</option>
-                                </select>
-                            </div>
-                            <!-- Show time -->
-                            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
-                                <label for="show-time-toggle" class="text-sm font-medium">Show Class Time</label>
-                                <input type="checkbox" id="show-time-toggle" class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer" checked>
-                            </div>
-                            <!-- Note position -->
-                            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
-                                <label for="note-position" class="text-sm font-medium">Note Position</label>
-                                <select id="note-position" class="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
-                                    <option value="above">Above Title</option>
-                                    <option value="below">Below Location</option>
-                                </select>
-                            </div>
-                            <!-- Custom time -->
-                            <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100 col-span-1 md:col-span-2">
-                                <label for="custom-time-toggle" class="text-sm font-medium">Customize Time Range</label>
-                                <input type="checkbox" id="custom-time-toggle" class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer">
-                            </div>
-                            <div id="time-range-controls" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-1 md:col-span-2">
-                                <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
-                                    <label for="start-time" class="text-sm font-medium">Start Time</label>
-                                    <select id="start-time" class="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"></select>
-                                </div>
-                                <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
-                                    <label for="end-time" class="text-sm font-medium">End Time</label>
-                                    <select id="end-time" class="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"></select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- custom palette -->
-                        <div id="custom-colors" class="hidden mt-4">
-                            <h3 class="font-semibold text-base mb-2">3. Customize Course Colors</h3>
-                            <div id="custom-color-pickers" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
-                        </div>
-
-                        <!-- extra info -->
-                        <div id="additional-info-container" class="hidden mt-4">
-                            <h3 class="font-semibold text-base mb-2">4. Add Notes for Specific Classes</h3>
-                            <div id="additional-info-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Download 按鈕 -->
-                <div class="mt-6 grid grid-cols-1 gap-4">
-                    <button id="mobile-download-btn" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-                        Download 9:16 Image
-                    </button>
-                </div>
-
-                <!-- 字體 / Hour Height / 背景圖設定 / time label 背景 / ttb 下移 / 行距 -->
-                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
-                        <label for="font-size-input" class="text-sm font-medium">Font Size (px)</label>
-                        <input id="font-size-input" type="number" value="6" step="1" class="w-24 p-1 border border-gray-300 rounded-lg text-right">
-                    </div>
-                    <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
-                        <label for="hour-height-input" class="text-sm font-medium">Hour Height (px)</label>
-                        <input id="hour-height-input" type="number" value="60" step="10" class="w-24 p-1 border border-gray-300 rounded-lg text-right">
-                    </div>
-
-                    <!-- 背景圖片控制 -->
-                    <div class="flex flex-col gap-2 p-3 rounded-lg bg-gray-100 md:col-span-2">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <input id="bg-enable-checkbox" type="checkbox" class="h-4 w-4 text-green-600 border-gray-300 rounded cursor-pointer">
-                                <label for="bg-enable-checkbox" class="text-sm font-medium">Use background picture</label>
-                            </div>
-                            <input id="bg-image-input" type="file" accept="image/*" class="text-xs">
-                        </div>
-                        <div class="flex items-center justify-between mt-2">
-                            <label for="bg-opacity-input" class="text-sm font-medium">Background Opacity</label>
-                            <input id="bg-opacity-input" type="range" min="0" max="1" step="0.05" value="0.3" class="w-40">
-                        </div>
-                        <div class="flex items-center justify-between mt-2">
-                            <label for="bg-size-input" class="text-sm font-medium">Background Size</label>
-                            <input id="bg-size-input" type="range" min="50" max="200" step="5" value="100" class="w-40">
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">
-                            When enabled, you can click and drag inside the timetable preview to move the background picture.
-                        </p>
-                    </div>
-
-                    <!-- time label 背景白色切換 -->
-                    <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
-                        <div class="flex items-center gap-2">
-                            <input id="time-white-bg-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-pointer">
-                            <label for="time-white-bg-checkbox" class="text-sm font-medium">White background for time labels (10:00, 11:00, ...)</label>
-                        </div>
-                    </div>
-
-                    <!-- 整個 timetable 下移 slider（預設約 45%） -->
-                    <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
-                        <div>
-                            <p class="text-sm font-medium">Shift timetable downward</p>
-                            <p class="text-xs text-gray-500">Move the whole timetable down inside the 9:16 preview.</p>
-                        </div>
-                        <input id="ttb-shift-input" type="range" min="-200" max="400" value="140" step="5" class="w-40">
-                    </div>
-
-                    <!-- 行距控制 -->
-                    <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
-                        <div>
-                            <p class="text-sm font-medium">Line spacing</p>
-                            <p class="text-xs text-gray-500">Control text line-height inside timetable.</p>
-                        </div>
-                        <input id="line-height-input" type="range" min="0.8" max="2.0" step="0.05" value="1.1" class="w-40">
-                    </div>
-                </div>
+      <!-- Left side: controls -->
+      <div class="lg:w-1/2 flex flex-col gap-6">
+        <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
+          <div class="flex flex-col gap-6">
+            <!-- Step 1 -->
+            <div class="flex flex-col gap-4">
+              <h2 class="text-lg sm:text-xl font-semibold mb-2">1. Paste Timetable Data</h2>
+              <p class="text-xs text-gray-500 mb-2">
+                Go to
+                <a
+                  href="https://selfservice.twc.edu.hk/PowerCampusSelfService/registration/schedule"
+                  target="_blank"
+                  class="text-blue-600 hover:underline"
+                  >Self-Service</a
+                >
+                &gt; List mode &gt; Ctrl+A &gt; Ctrl+C &gt; Paste below
+              </p>
+              <textarea
+                id="timetable-data"
+                rows="10"
+                class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-400"
+              ></textarea>
+              <button
+                id="generate-btn"
+                class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105"
+              >
+                Generate Timetable
+              </button>
             </div>
-        </div>
 
-        <!-- 右欄：9:16 預覽 -->
-        <div class="lg:w-1/2 flex justify-center items-start">
-            <div id="preview-9-16-wrapper" class="transition-colors duration-300">
-                <div id="timetable-container">
-                    <div id="ttb-bg-layer" style="opacity:0.3;"></div>
-                    <div id="ttb-content-layer" style="transform: translateY(140px);">
-                        <div class="flex justify-center items-center h-full text-gray-400">
-                            <p>Your timetable will be displayed here.</p>
-                        </div>
-                    </div>
+            <!-- Step 2 -->
+            <div>
+              <h2 class="text-lg sm:text-xl font-semibold mb-2">2. Customize Appearance</h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Theme -->
+                <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
+                  <label for="theme-toggle" class="text-sm font-medium">Timetable Theme</label>
+                  <button
+                    id="theme-toggle"
+                    class="px-4 py-2 rounded-lg text-sm font-medium bg-white shadow-sm"
+                  >
+                    <span class="light-mode-icon">Dark</span>
+                    <span class="dark-mode-icon hidden">Light</span>
+                  </button>
                 </div>
+
+                <!-- Palette -->
+                <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
+                  <label for="color-palette" class="text-sm font-medium">Color Palette</label>
+                  <select
+                    id="color-palette"
+                    class="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="default">Default</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="vintage">Vintage</option>
+                    <option value="neon">Neon</option>
+                    <option value="ocean">Ocean</option>
+                    <option value="forest">Forest</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="monochrome">Monochrome</option>
+                    <option value="berry">Berry</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+
+                <!-- Show time -->
+                <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
+                  <label for="show-time-toggle" class="text-sm font-medium">Show Class Time</label>
+                  <input
+                    type="checkbox"
+                    id="show-time-toggle"
+                    class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                    checked
+                  />
+                </div>
+
+                <!-- Note position -->
+                <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
+                  <label for="note-position" class="text-sm font-medium">Note Position</label>
+                  <select
+                    id="note-position"
+                    class="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="above">Above Title</option>
+                    <option value="below">Below Location</option>
+                  </select>
+                </div>
+
+                <!-- Custom time -->
+                <div
+                  class="flex justify-between items-center p-3 rounded-lg bg-gray-100 col-span-1 md:col-span-2"
+                >
+                  <label for="custom-time-toggle" class="text-sm font-medium">Customize Time Range</label>
+                  <input
+                    type="checkbox"
+                    id="custom-time-toggle"
+                    class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                  />
+                </div>
+
+                <div
+                  id="time-range-controls"
+                  class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-1 md:col-span-2"
+                >
+                  <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
+                    <label for="start-time" class="text-sm font-medium">Start Time</label>
+                    <select
+                      id="start-time"
+                      class="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+                    ></select>
+                  </div>
+                  <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
+                    <label for="end-time" class="text-sm font-medium">End Time</label>
+                    <select
+                      id="end-time"
+                      class="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+                    ></select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- custom palette -->
+              <div id="custom-colors" class="hidden mt-4">
+                <h3 class="font-semibold text-base mb-2">3. Customize Course Colors</h3>
+                <div id="custom-color-pickers" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+              </div>
+
+              <!-- extra info -->
+              <div id="additional-info-container" class="hidden mt-4">
+                <h3 class="font-semibold text-base mb-2">4. Add Notes for Specific Classes</h3>
+                <div
+                  id="additional-info-inputs"
+                  class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto"
+                ></div>
+              </div>
             </div>
+
+            <!-- Download -->
+            <div class="mt-6 grid grid-cols-1 gap-4">
+              <button
+                id="mobile-download-btn"
+                class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled
+              >
+                Download 9:16 Image
+              </button>
+            </div>
+
+            <!-- Hour Height / time label / etc -->
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
+                <label for="font-size-input" class="text-sm font-medium">Font Size (px)</label>
+                <input
+                  id="font-size-input"
+                  type="number"
+                  value="6"
+                  step="1"
+                  class="w-24 p-1 border border-gray-300 rounded-lg text-right"
+                />
+              </div>
+              <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
+                <label for="hour-height-input" class="text-sm font-medium">Hour Height (px)</label>
+                <input
+                  id="hour-height-input"
+                  type="number"
+                  value="60"
+                  step="10"
+                  class="w-24 p-1 border border-gray-300 rounded-lg text-right"
+                />
+              </div>
+
+              <!-- Background controls -->
+              <div class="flex flex-col gap-2 p-3 rounded-lg bg-gray-100 md:col-span-2">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <input
+                      id="bg-enable-checkbox"
+                      type="checkbox"
+                      class="h-4 w-4 text-green-600 border-gray-300 rounded cursor-pointer"
+                    />
+                    <label for="bg-enable-checkbox" class="text-sm font-medium">
+                      Use background picture
+                    </label>
+                  </div>
+                  <input id="bg-image-input" type="file" accept="image/*" class="text-xs" />
+                </div>
+
+                <div class="flex items-center justify-between mt-2">
+                  <label for="bg-opacity-input" class="text-sm font-medium">Background Opacity</label>
+                  <input
+                    id="bg-opacity-input"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value="0.3"
+                    class="w-40"
+                  />
+                </div>
+
+                <div class="flex items-center justify-between mt-2">
+                  <label for="bg-size-input" class="text-sm font-medium">Background Size</label>
+                  <input
+                    id="bg-size-input"
+                    type="range"
+                    min="50"
+                    max="200"
+                    step="5"
+                    value="100"
+                    class="w-40"
+                  />
+                </div>
+
+                <p class="text-xs text-gray-500 mt-1">
+                  When enabled, you can click and drag inside the timetable preview to move the background picture.
+                </p>
+              </div>
+
+              <!-- Time label white bg -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
+                <div class="flex items-center gap-2">
+                  <input
+                    id="time-white-bg-checkbox"
+                    type="checkbox"
+                    class="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-pointer"
+                  />
+                  <label for="time-white-bg-checkbox" class="text-sm font-medium">
+                    White background for time labels (1000, 1100, ...)
+                  </label>
+                </div>
+              </div>
+
+              <!-- timetable slider -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
+                <div>
+                  <p class="text-sm font-medium">Shift timetable downward</p>
+                  <p class="text-xs text-gray-500">
+                    Move the whole timetable down inside the 9:16 preview.
+                  </p>
+                </div>
+                <input
+                  id="ttb-shift-input"
+                  type="range"
+                  min="-200"
+                  max="400"
+                  value="140"
+                  step="5"
+                  class="w-40"
+                />
+              </div>
+
+              <!-- line height -->
+              <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
+                <div>
+                  <p class="text-sm font-medium">Line spacing</p>
+                  <p class="text-xs text-gray-500">Control text line-height inside timetable.</p>
+                </div>
+                <input
+                  id="line-height-input"
+                  type="range"
+                  min="0.8"
+                  max="2.0"
+                  step="0.05"
+                  value="1.1"
+                  class="w-40"
+                />
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Right side: 9:16 preview -->
+      <div class="lg:w-1/2 flex justify-center items-start">
+        <div
+          id="preview-9-16-wrapper"
+          class="preview-9-16-wrapper bg-white rounded-2xl shadow-lg overflow-hidden transition-colors duration-300"
+        >
+          <div id="timetable-container" class="timetable-container">
+            <div id="ttb-bg-layer" class="ttb-bg-layer" style="opacity: 0.3"></div>
+            <div
+              id="ttb-content-layer"
+              class="ttb-content-layer"
+              style="transform: translateY(140px);"
+            >
+              <div class="flex justify-center items-center h-full text-gray-400 p-4">
+                Your timetable will be displayed here.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <footer class="text-center mt-8 text-sm text-gray-500">
-        <p>&copy; David Cheng | Contact: twccredittransfer@gmail.com</p>
+      <p>© David Cheng · Contact: twccredittransfer@gmail.com</p>
     </footer>
-</div>
+  </div>
 
-<script>
-    const generateBtn = document.getElementById('generate-btn');
-    const mobileDownloadBtn = document.getElementById('mobile-download-btn');
-    const dataInput = document.getElementById('timetable-data');
-    const timetableContainer = document.getElementById('timetable-container');
-    const wrapper = document.getElementById('preview-9-16-wrapper');
+  <script>
+    const generateBtn = document.getElementById("generate-btn");
+    const mobileDownloadBtn = document.getElementById("mobile-download-btn");
+    const dataInput = document.getElementById("timetable-data");
+    const timetableContainer = document.getElementById("timetable-container");
+    const wrapper = document.getElementById("preview-9-16-wrapper");
+    const ttbBgLayer = document.getElementById("ttb-bg-layer");
+    const ttbContentLayer = document.getElementById("ttb-content-layer");
 
-    const ttbBgLayer = document.getElementById('ttb-bg-layer');
-    const ttbContentLayer = document.getElementById('ttb-content-layer');
+    const colorPaletteSelect = document.getElementById("color-palette");
+    const customColorsContainer = document.getElementById("custom-colors");
+    const customColorPickers = document.getElementById("custom-color-pickers");
 
-    const colorPaletteSelect = document.getElementById('color-palette');
-    const customColorsContainer = document.getElementById('custom-colors');
-    const customColorPickers = document.getElementById('custom-color-pickers');
-    const additionalInfoContainer = document.getElementById('additional-info-container');
-    const additionalInfoInputs = document.getElementById('additional-info-inputs');
-    const themeToggle = document.getElementById('theme-toggle');
-    const showTimeToggle = document.getElementById('show-time-toggle');
-    const notePositionSelect = document.getElementById('note-position');
-    const customTimeToggle = document.getElementById('custom-time-toggle');
-    const timeRangeControls = document.getElementById('time-range-controls');
-    const startTimeSelect = document.getElementById('start-time');
-    const endTimeSelect = document.getElementById('end-time');
+    const additionalInfoContainer = document.getElementById("additional-info-container");
+    const additionalInfoInputs = document.getElementById("additional-info-inputs");
 
-    const fontSizeInput = document.getElementById('font-size-input');
-    const hourHeightInput = document.getElementById('hour-height-input');
+    const themeToggle = document.getElementById("theme-toggle");
+    const showTimeToggle = document.getElementById("show-time-toggle");
+    const notePositionSelect = document.getElementById("note-position");
+    const customTimeToggle = document.getElementById("custom-time-toggle");
+    const timeRangeControls = document.getElementById("time-range-controls");
+    const startTimeSelect = document.getElementById("start-time");
+    const endTimeSelect = document.getElementById("end-time");
 
-    const bgEnableCheckbox = document.getElementById('bg-enable-checkbox');
-    const bgImageInput = document.getElementById('bg-image-input');
-    const bgOpacityInput = document.getElementById('bg-opacity-input');
-    const bgSizeInput = document.getElementById('bg-size-input');
-
-    const timeWhiteBgCheckbox = document.getElementById('time-white-bg-checkbox');
-    const ttbShiftInput = document.getElementById('ttb-shift-input');
-    const lineHeightInput = document.getElementById('line-height-input');
+    const fontSizeInput = document.getElementById("font-size-input");
+    const hourHeightInput = document.getElementById("hour-height-input");
+    const bgEnableCheckbox = document.getElementById("bg-enable-checkbox");
+    const bgImageInput = document.getElementById("bg-image-input");
+    const bgOpacityInput = document.getElementById("bg-opacity-input");
+    const bgSizeInput = document.getElementById("bg-size-input");
+    const timeWhiteBgCheckbox = document.getElementById("time-white-bg-checkbox");
+    const ttbShiftInput = document.getElementById("ttb-shift-input");
+    const lineHeightInput = document.getElementById("line-height-input");
 
     let parsedCourses = [];
     let courseColors = new Map();
@@ -357,584 +499,750 @@
     let dragStartY = 0;
     let bgStartPosX = 50;
     let bgStartPosY = 50;
-
-    let bgImageDataUrl = '';
+    let bgImageDataUrl = null;
 
     const palettes = {
-        default: ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'],
-        pastel: ['#fecaca', '#bfdbfe', '#bbf7d0', '#fef08a', '#ddd6fe', '#fbcfe8', '#99f6e4', '#fed7aa'],
-        vintage: ['#d5a37d', '#a0522d', '#8b4513', '#bc8f8f', '#f4a460', '#d2b48c', '#cd853f', '#bdb76b'],
-        neon: ['#39ff14', '#ff073a', '#00cff0', '#ff1dce', '#f8ff01', '#ffac01', '#ff00ff', '#00ffff'],
-        ocean: ['#0369a1', '#06b6d4', '#67e8f9', '#0891b2', '#0e7490', '#164e63', '#a5f3fc', '#cffafe'],
-        forest: ['#166534', '#15803d', '#22c55e', '#4ade80', '#86efac', '#5d4037', '#795548', '#a1887f'],
-        sunset: ['#ea580c', '#f97316', '#fb923c', '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d'],
-        monochrome: ['#d1d5db', '#9ca3af', '#6b7280', '#4b5563', '#374151', '#1f2937', '#e5e7eb', '#f3f4f6'],
-        berry: ['#8e24aa', '#d81b60', '#c2185b', '#e91e63', '#9c27b0', '#6a1b9a', '#4a148c', '#ad1457']
+      default: [
+        "#ef4444",
+        "#3b82f6",
+        "#22c55e",
+        "#eab308",
+        "#8b5cf6",
+        "#ec4899",
+        "#14b8a6",
+        "#f97316",
+      ],
+      pastel: [
+        "#fecaca",
+        "#bfdbfe",
+        "#bbf7d0",
+        "#fef08a",
+        "#ddd6fe",
+        "#fbcfe8",
+        "#99f6e4",
+        "#fed7aa",
+      ],
+      vintage: [
+        "#d5a37d",
+        "#a0522d",
+        "#8b4513",
+        "#bc8f8f",
+        "#f4a460",
+        "#d2b48c",
+        "#cd853f",
+        "#bdb76b",
+      ],
+      neon: [
+        "#39ff14",
+        "#ff073a",
+        "#00cff0",
+        "#ff1dce",
+        "#f8ff01",
+        "#ffac01",
+        "#ff00ff",
+        "#00ffff",
+      ],
+      ocean: [
+        "#0369a1",
+        "#06b6d4",
+        "#67e8f9",
+        "#0891b2",
+        "#0e7490",
+        "#164e63",
+        "#a5f3fc",
+        "#cffafe",
+      ],
+      forest: [
+        "#166534",
+        "#15803d",
+        "#22c55e",
+        "#4ade80",
+        "#86efac",
+        "#5d4037",
+        "#795548",
+        "#a1887f",
+      ],
+      sunset: [
+        "#ea580c",
+        "#f97316",
+        "#fb923c",
+        "#f9a8d4",
+        "#f472b6",
+        "#ec4899",
+        "#db2777",
+        "#be185d",
+      ],
+      monochrome: [
+        "#d1d5db",
+        "#9ca3af",
+        "#6b7280",
+        "#4b5563",
+        "#374151",
+        "#1f2937",
+        "#e5e7eb",
+        "#f3f4f6",
+      ],
+      berry: [
+        "#8e24aa",
+        "#d81b60",
+        "#c2185b",
+        "#e91e63",
+        "#9c27b0",
+        "#6a1b9a",
+        "#4a148c",
+        "#ad1457",
+      ],
     };
 
-    const placeholderData = `
-Course Title: Imaging Anatomy | Credits: 0.0 | Credit type: Letter Grade
-10:00 - 11:50
-FRI
-Tung Wah College, King's Park Campus, KPC-907(9/F)
+    const placeholderData = `Course Title: Imaging Anatomy
+Credits: 0.0
+Credit type: Letter Grade
+1000 - 1150 FRI
+Tung Wah College, Kings Park Campus, KPC-9079F
 REGISTERED
 
-Course Title: Imaging Anatomy | Credits: 3.0 | Credit type: Letter Grade
-17:00 - 18:50
-FRI
-Tung Wah College, Mong Kok Campus, MKA-HCLT(2/F)
+Course Title: Imaging Anatomy
+Credits: 3.0
+Credit type: Letter Grade
+1700 - 1850 FRI
+Tung Wah College, Mong Kok Campus, MKA-HCLT2F
 REGISTERED
 
-Course Title: Radiation Physics | Credits: 3.0 | Credit type: Letter Grade
-15:00 - 16:50
-TUE
-Tung Wah College, Mong Kok Campus, MKA-801(8/F)
+Course Title: Radiation Physics
+Credits: 3.0
+Credit type: Letter Grade
+1500 - 1650 TUE
+Tung Wah College, Mong Kok Campus, MKA-8018F
 REGISTERED
 
-Course Title: Radiation Physics | Credits: 0.0 | Credit type: Letter Grade
-17:00 - 17:50
-TUE
-Tung Wah College, Mong Kok Campus, MKA-801(8/F)
+Course Title: Radiation Physics
+Credits: 0.0
+Credit type: Letter Grade
+1700 - 1750 TUE
+Tung Wah College, Mong Kok Campus, MKA-8018F
 REGISTERED
 
-Course Title: Medical Imaging Instrumentation | Credits: 3.0 | Credit type: Letter Grade
-18:00 - 20:50
-THU
-Tung Wah College, Mong Kok Campus, MKA-501(5/F)
+Course Title: Medical Imaging Instrumentation
+Credits: 3.0
+Credit type: Letter Grade
+1800 - 2050 THU
+Tung Wah College, Mong Kok Campus, MKA-5015F
 REGISTERED
 
-Course Title: Medical Imaging Instrumentation | Credits: 0.0 | Credit type: Letter Grade
-12:00 - 13:50
-WED
-Tung Wah College, King's Park Campus, KPC-1101(11/F)
+Course Title: Medical Imaging Instrumentation
+Credits: 0.0
+Credit type: Letter Grade
+1800 - 1850 WED
+Tung Wah College, Mong Kok Campus, MKA-5015F
 REGISTERED
 
-Course Title: General Pathology | Credits: 3.0 | Credit type: Letter Grade
-14:00 - 15:50
-FRI
-Tung Wah College, Mong Kok Campus, MKA-HCLT(2/F)
-REGISTERED... Course Title: General Pathology | Credits: 0.0 | Credit type: Letter Grade
-16:00 - 16:50
-FRI
-Tung Wah College, Mong Kok Campus, MKA-801(8/F)
+Course Title: Medical Imaging Instrumentation
+Credits: 0.0
+Credit type: Letter Grade
+1200 - 1350 WED
+Tung Wah College, Kings Park Campus, KPC-1101/11F
 REGISTERED
 
-Course Title: General Pathology | Credits: 0.0 | Credit type: Letter Grade
-14:00 - 16:50
-MON
-Tung Wah College, King's Park Campus, KPC-130506(13/F)
+Course Title: General Pathology
+Credits: 3.0
+Credit type: Letter Grade
+1400 - 1550 FRI
+Tung Wah College, Mong Kok Campus, MKA-HCLT2F
 REGISTERED
 
-Course Title: Introduction to Statistics | Credits: 0.0 | Credit type: Letter Grade
-15:00 - 16:50
-THU
-Tung Wah College, King's Park Campus, KPC-905(9/F)
+Course Title: General Pathology
+Credits: 0.0
+Credit type: Letter Grade
+1600 - 1650 FRI
+Tung Wah College, Mong Kok Campus, MKA-8018F
 REGISTERED
 
-Course Title: Introduction to Statistics | Credits: 3.0 | Credit type: Letter Grade
-18:00 - 18:50
-MON
-Tung Wah College, Mong Kok Campus, MKB-201(2/F)
+Course Title: General Pathology
+Credits: 0.0
+Credit type: Letter Grade
+1400 - 1650 MON
+Tung Wah College, Kings Park Campus, KPC-1305/06/13F
 REGISTERED
-    `;
+
+Course Title: Introduction to Statistics
+Credits: 0.0
+Credit type: Letter Grade
+1500 - 1650 THU
+Tung Wah College, Kings Park Campus, KPC-9059F
+REGISTERED
+
+Course Title: Introduction to Statistics
+Credits: 3.0
+Credit type: Letter Grade
+1800 - 1850 MON
+Tung Wah College, Mong Kok Campus, MKB-2012F
+REGISTERED`;
 
     function populateTimeSelects() {
-        const times = [];
-        for (let hour = 7; hour <= 23; hour++) {
-            const h = hour.toString().padStart(2, '0');
-            times.push(`${h}:00`);
-        }
-        startTimeSelect.innerHTML = times.map(time => `<option value="${time}">${time}</option>`).join('');
-        endTimeSelect.innerHTML = times.map(time => `<option value="${time}">${time}</option>`).join('');
+      const times = [];
+      for (let hour = 7; hour <= 23; hour++) {
+        const h = hour.toString().padStart(2, "0");
+        times.push(`${h}00`);
+      }
+      startTimeSelect.innerHTML = times
+        .map((time) => `<option value="${time}">${time}</option>`)
+        .join("");
+      endTimeSelect.innerHTML = times
+        .map((time) => `<option value="${time}">${time}</option>`)
+        .join("");
     }
+
     populateTimeSelects();
 
     function findMinMaxTimes(courses) {
-        if (courses.length === 0) return { minTime: '08:00', maxTime: '22:00' };
-        let minTime = '23:59';
-        let maxTime = '00:00';
-        courses.forEach(course => {
-            if (course.startTime < minTime) minTime = course.startTime;
-            if (course.endTime > maxTime) maxTime = course.endTime;
-        });
-        const minH = parseInt(minTime.split(':')[0]);
-        const newMinTime = `${minH.toString().padStart(2, '0')}:00`;
-        const maxH = parseInt(maxTime.split(':')[0]);
-        const maxM = parseInt(maxTime.split(':')[1]);
-        const newMaxH = maxM > 0 ? maxH + 1 : maxH;
-        const newMaxTime = `${newMaxH.toString().padStart(2, '0')}:00`;
-        return { minTime: newMinTime, maxTime: newMaxTime };
+      if (courses.length === 0) {
+        return { minTime: "0800", maxTime: "2200" };
+      }
+      let minTime = "2359";
+      let maxTime = "0000";
+      courses.forEach((course) => {
+        if (course.startTime < minTime) minTime = course.startTime;
+        if (course.endTime > maxTime) maxTime = course.endTime;
+      });
+      const minH = parseInt(minTime.split(":")[0], 10);
+      const newMinTime = `${minH.toString().padStart(2, "0")}00`;
+
+      const maxH = parseInt(maxTime.split(":")[0], 10);
+      const maxM = parseInt(maxTime.split(":")[1], 10);
+      const newMaxH = maxM > 0 ? maxH + 1 : maxH;
+      const newMaxTime = `${newMaxH.toString().padStart(2, "0")}00`;
+
+      return { minTime: newMinTime, maxTime: newMaxTime };
     }
 
-    function getContrastTextColor(hexcolor){
-        if (!hexcolor) return 'text-white';
-        hexcolor = hexcolor.replace("#", "");
-        const r = parseInt(hexcolor.substr(0,2),16);
-        const g = parseInt(hexcolor.substr(2,2),16);
-        const b = parseInt(hexcolor.substr(4,2),16);
-        const yiq = ((r*299)+(g*587)+(b*114))/1000;
-        return (yiq >= 128) ? 'text-gray-800' : 'text-white';
+    function getContrastTextColor(hexcolor) {
+      if (!hexcolor) return "text-white";
+      hexcolor = hexcolor.replace("#", "");
+      const r = parseInt(hexcolor.substr(0, 2), 16);
+      const g = parseInt(hexcolor.substr(2, 2), 16);
+      const b = parseInt(hexcolor.substr(4, 2), 16);
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      return yiq >= 128 ? "text-gray-800" : "text-white";
     }
 
     function parseTimetableData(data) {
-        const courses = [];
-        const entries = data.split('REGISTERED').filter(entry => entry.trim() !== '');
-        entries.forEach(entry => {
-            const titleMatch = entry.match(/Course Title: (.*?)\s\|/);
-            const timeMatch = entry.match(/(\d{2}:\d{2})\s-\s(\d{2}:\d{2})/);
-            const dayMatch = entry.match(/\b(MON|TUE|WED|THU|FRI|SAT)\b/);
-            const roomMatch = entry.match(/\b([A-Z]{3}-[\w\d-]+)\b/);
-            const typeMatch = entry.match(/\b(Lecture|Seminar|Laboratory)\b/i);
+      const courses = [];
+      const entries = data.split("REGISTERED").filter((entry) => entry.trim());
+      entries.forEach((entry) => {
+        const titleMatch = entry.match(/Course Title:\s*(.+)/);
+        const timeMatch = entry.match(/(\d{4})\s*-\s*(\d{4})\s*(MON|TUE|WED|THU|FRI|SAT)/);
+        const dayMatch = entry.match(/(MON|TUE|WED|THU|FRI|SAT)/);
+        const roomMatch = entry.match(/Campus,\s*([A-Z0-9\-\/]+)/);
+        const typeMatch = entry.match(/(Lecture|Seminar|Laboratory)/i);
 
-            const typeMap = { 'lecture': 'LEC', 'seminar': 'SEM', 'laboratory': 'LAB' };
-            let courseType = '';
-            if (typeMatch) courseType = typeMap[typeMatch[0].toLowerCase()];
+        const typeMap = {
+          lecture: "LEC",
+          seminar: "SEM",
+          laboratory: "LAB",
+        };
 
-            if (titleMatch && timeMatch && dayMatch && roomMatch) {
-                courses.push({
-                    title: titleMatch[1].trim(),
-                    startTime: timeMatch[1],
-                    endTime: timeMatch[2],
-                    day: dayMatch[1],
-                    room: roomMatch[1],
-                    type: courseType
-                });
-            }
-        });
-        return courses;
+        let courseType = "";
+        if (typeMatch) {
+          courseType = typeMap[typeMatch[0].toLowerCase()] || "";
+        }
+
+        if (titleMatch && timeMatch && dayMatch && roomMatch) {
+          courses.push({
+            title: titleMatch[1].trim(),
+            startTime: timeMatch[1],
+            endTime: timeMatch[2],
+            day: dayMatch[1],
+            room: roomMatch[1],
+            type: courseType,
+          });
+        }
+      });
+      return courses;
     }
 
     function assignColors() {
-        const paletteKey = colorPaletteSelect.value;
-        courseColors.clear();
-        uniqueCourses = [...new Set(parsedCourses.map(c => c.title))];
+      const paletteKey = colorPaletteSelect.value;
+      courseColors.clear();
+      uniqueCourses = [...new Set(parsedCourses.map((c) => c.title))];
 
-        if (paletteKey === 'custom') {
-            uniqueCourses.forEach(title => {
-                const idSafeTitle = title.replace(/\s|[^a-zA-Z0-9]/g, '-');
-                const picker = document.getElementById(`color-${idSafeTitle}`);
-                if (picker) courseColors.set(title, picker.value);
-            });
-            return;
-        }
-        const selectedPalette = palettes[paletteKey];
-        uniqueCourses.forEach((title, index) => {
-            courseColors.set(title, selectedPalette[index % selectedPalette.length]);
+      if (paletteKey === "custom") {
+        uniqueCourses.forEach((title) => {
+          const idSafeTitle = title.replace(/[^a-zA-Z0-9]/g, "-");
+          const picker = document.getElementById(`color-${idSafeTitle}`);
+          if (picker) {
+            courseColors.set(title, picker.value);
+          }
         });
+        return;
+      }
+
+      const selectedPalette = palettes[paletteKey] || palettes["default"];
+      uniqueCourses.forEach((title, index) => {
+        courseColors.set(title, selectedPalette[index % selectedPalette.length]);
+      });
     }
 
     function renderTimetable() {
-        if (parsedCourses.length === 0) {
-            ttbContentLayer.innerHTML = `
-                <div class="flex justify-center items-center h-full text-gray-400">
-                    <p>No valid course data found. Please check your input.</p>
-                </div>`;
-            mobileDownloadBtn.disabled = true;
-            return;
-        }
+      if (parsedCourses.length === 0) {
+        ttbContentLayer.innerHTML = `
+          <div class="flex justify-center items-center h-full text-gray-400 p-4">
+            No valid course data found. Please check your input.
+          </div>
+        `;
+        mobileDownloadBtn.disabled = true;
+        return;
+      }
 
-        mobileDownloadBtn.disabled = false;
-        assignColors();
+      mobileDownloadBtn.disabled = false;
+      assignColors();
 
-        const hasSaturday = parsedCourses.some(c => c.day === 'SAT');
-        const days = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
-        if (hasSaturday) days.push('SAT');
+      const hasSaturday = parsedCourses.some((c) => c.day === "SAT");
+      const days = ["MON", "TUE", "WED", "THU", "FRI"];
+      if (hasSaturday) days.push("SAT");
 
-        let minTime, maxTime;
-        if (customTimeToggle.checked) {
-            minTime = startTimeSelect.value;
-            maxTime = endTimeSelect.value;
+      let minTime, maxTime;
+      if (customTimeToggle.checked) {
+        minTime = startTimeSelect.value;
+        maxTime = endTimeSelect.value;
+      } else {
+        const auto = findMinMaxTimes(parsedCourses);
+        minTime = auto.minTime;
+        maxTime = auto.maxTime;
+        startTimeSelect.value = auto.minTime;
+        endTimeSelect.value = auto.maxTime;
+      }
+
+      const minHour = parseInt(minTime.slice(0, 2), 10);
+      const maxHour = parseInt(maxTime.slice(0, 2), 10);
+      const hourHeight = currentHourHeight;
+
+      const isTimetableDark = wrapper.classList.contains("timetable-dark");
+      const showTimes = showTimeToggle.checked;
+      const notePosition = notePositionSelect.value;
+
+      wrapper.style.backgroundColor = isTimetableDark ? "#111827" : "#ffffff";
+      timetableContainer.style.backgroundColor = isTimetableDark ? "#111827" : "#ffffff";
+
+      const headerBg = isTimetableDark ? "bg-transparent" : "bg-transparent";
+      const textColor = isTimetableDark ? "text-gray-100" : "text-gray-900";
+      const timeColor = isTimetableDark ? "text-gray-300" : "text-gray-600";
+      const borderColor = isTimetableDark ? "border-gray-600/80" : "border-gray-300/80";
+
+      const timeColumnWidth = "60px";
+      const gridTemplateColumns = `${timeColumnWidth} repeat(${days.length}, minmax(0, 1fr))`;
+
+      const coreHeight = (maxHour - minHour) * hourHeight;
+
+      let headerHtml = `
+        <div class="grid sticky top-0 ${headerBg} ${textColor} z-20 border-b ${borderColor}" 
+             style="grid-template-columns: ${gridTemplateColumns}; line-height:${currentLineHeight};">
+      `;
+
+      headerHtml += `
+        <div class="p-2 font-semibold text-center ${borderColor} border-r" 
+             style="font-size:${currentFontSize}px;">
+          <span class="time-label-inner ${timeWhiteBgCheckbox.checked ? "white-bg" : ""}">
+            Time
+          </span>
+        </div>
+      `;
+
+      days.forEach((day) => {
+        headerHtml += `
+          <div class="p-2 font-semibold text-center border-l ${borderColor}"
+               style="font-size:${currentFontSize}px;">
+            <span class="time-label-inner ${timeWhiteBgCheckbox.checked ? "white-bg" : ""}">
+              ${day}
+            </span>
+          </div>
+        `;
+      });
+
+      headerHtml += `</div>`;
+
+      let bodyHtml = `
+        <div class="relative grid" 
+             style="grid-template-columns:${gridTemplateColumns}; height:${coreHeight}px; line-height:${currentLineHeight};">
+      `;
+
+      bodyHtml += `<div class="relative">`;
+      for (let hour = minHour; hour < maxHour; hour++) {
+        const label = `${hour.toString().padStart(2, "0")}00`;
+        const innerClass = timeWhiteBgCheckbox.checked ? "time-label-inner white-bg" : "time-label-inner";
+        bodyHtml += `
+          <div class="text-center text-sm ${timeColor} pt-1 border-r ${borderColor}" 
+               style="height:${hourHeight}px; font-size:${currentFontSize}px;">
+            <span class="${innerClass}">${label}</span>
+          </div>
+        `;
+      }
+      bodyHtml += `</div>`;
+
+      days.forEach((day) => {
+        bodyHtml += `<div class="relative timetable-cell ${borderColor}" data-day="${day}"></div>`;
+      });
+
+      for (let hour = minHour; hour < maxHour; hour++) {
+        const lineTop = (hour - minHour) * hourHeight;
+        bodyHtml += `
+          <div class="absolute left-0 right-0 border-b border-dashed ${borderColor} z-0"
+               style="top:${lineTop}px; grid-column:1 / -1;"></div>
+        `;
+      }
+
+      bodyHtml += `</div>`;
+
+      ttbContentLayer.innerHTML = headerHtml + bodyHtml;
+
+      const shiftVal = parseInt(ttbShiftInput.value, 10) || 0;
+      ttbContentLayer.style.transform = `translateY(${shiftVal}px)`;
+
+      parsedCourses.forEach((course, index) => {
+        const dayContainer = ttbContentLayer.querySelector(`[data-day="${course.day}"]`);
+        if (!dayContainer) return;
+
+        const [startH, startM] = [parseInt(course.startTime.slice(0, 2), 10), parseInt(course.startTime.slice(2), 10)];
+        const [endHorig, endMorig] = [
+          parseInt(course.endTime.slice(0, 2), 10),
+          parseInt(course.endTime.slice(2), 10),
+        ];
+
+        const endHrounded = endMorig > 0 ? endHorig + 1 : endHorig;
+
+        const minutesFromMin = (startH - minHour) * 60 + startM;
+        const top = (minutesFromMin / 60) * hourHeight;
+
+        const durationMinutes = endHrounded * 60 - (startH * 60 + startM);
+        const height = (durationMinutes / 60) * hourHeight;
+
+        if (top < 0 && Math.abs(top) >= height) return;
+
+        const courseBlock = document.createElement("div");
+        courseBlock.className =
+          "absolute w-full p-2 rounded-lg border overflow-hidden flex flex-col items-center justify-center z-10";
+        courseBlock.style.top = `${top + 1}px`;
+        courseBlock.style.height = `${height - 2}px`;
+        courseBlock.style.left = "0px";
+        courseBlock.style.fontSize = `${currentFontSize}px`;
+        courseBlock.style.lineHeight = currentLineHeight;
+
+        const color = courseColors.get(course.title);
+        const courseTextColor = getContrastTextColor(color);
+        const extraInfo = additionalInfo.get(index) || "";
+
+        const extraInfoHtml = extraInfo
+          ? `<p class="font-semibold mt-1">${extraInfo}</p>`
+          : "";
+
+        courseBlock.style.backgroundColor = color || "#6b7280";
+        courseBlock.style.borderColor = "rgba(0,0,0,0.1)";
+        courseBlock.classList.add(courseTextColor);
+
+        const titleHtml = `
+          <p class="font-bold" style="font-size:${currentFontSize + 1}px;">
+            ${course.title}${course.type ? ` (${course.type})` : ""}
+          </p>
+        `;
+        const locationHtml = `<p>${course.room}</p>`;
+        const timeHtml = showTimes
+          ? `<p class="opacity-80">${course.startTime} - ${course.endTime}</p>`
+          : "";
+
+        let innerHtml = "";
+        if (notePosition === "above") {
+          innerHtml = `${extraInfoHtml}${titleHtml}${locationHtml}${timeHtml}`;
         } else {
-            const auto = findMinMaxTimes(parsedCourses);
-            minTime = auto.minTime;
-            maxTime = auto.maxTime;
-            startTimeSelect.value = auto.minTime;
-            endTimeSelect.value = auto.maxTime;
+          innerHtml = `${titleHtml}${locationHtml}${extraInfoHtml}${timeHtml}`;
         }
 
-        const minHour = parseInt(minTime.split(':')[0]);
-        const maxHour = parseInt(maxTime.split(':')[0]);
-
-        const hourHeight = currentHourHeight;
-        const isTimetableDark = wrapper.classList.contains('timetable-dark');
-        const showTimes = showTimeToggle.checked;
-        const notePosition = notePositionSelect.value;
-
-        wrapper.style.backgroundColor = isTimetableDark ? '#111827' : '#ffffff';
-        timetableContainer.style.backgroundColor = isTimetableDark ? '#111827' : '#ffffff';
-
-        const headerBg = 'bg-transparent';
-        const textColor = isTimetableDark ? 'text-gray-100' : 'text-gray-900';
-        const timeColor = isTimetableDark ? 'text-gray-300' : 'text-gray-600';
-        const borderColor = isTimetableDark ? 'border-gray-600/80' : 'border-gray-300/80';
-
-        const timeColumnWidth = '60px';
-        const gridTemplateColumns = `grid-template-columns: ${timeColumnWidth} repeat(${days.length}, minmax(0, 1fr));`;
-
-        const coreHeight = (maxHour - minHour) * hourHeight;
-
-        let headerHtml = `<div class="grid sticky top-0 ${headerBg} ${textColor} z-20 border-b ${borderColor}" style="${gridTemplateColumns}; line-height:${currentLineHeight};">`;
-        headerHtml += `<div class="p-2 font-semibold text-center ${borderColor} border-r" style="font-size:${currentFontSize}px;">
-            <span class="time-label-inner${timeWhiteBgCheckbox.checked ? ' white-bg' : ''}">Time</span>
-        </div>`;
-        days.forEach(day => {
-            headerHtml += `<div class="p-2 font-semibold text-center border-l ${borderColor}" style="font-size:${currentFontSize}px;">
-                <span class="time-label-inner${timeWhiteBgCheckbox.checked ? ' white-bg' : ''}">${day}</span>
-            </div>`;
-        });
-        headerHtml += '</div>';
-
-        let bodyHtml = `<div class="relative grid" style="${gridTemplateColumns}; height:${coreHeight}px; line-height:${currentLineHeight};">`;
-
-        // time column
-        bodyHtml += `<div class="relative">`;
-        for (let hour = minHour; hour < maxHour; hour++) {
-            const innerClass = timeWhiteBgCheckbox.checked ? 'time-label-inner white-bg' : 'time-label-inner';
-            bodyHtml += `
-                <div class="text-center text-sm ${timeColor} pt-1 border-r ${borderColor}" style="height:${hourHeight}px;font-size:${currentFontSize}px;">
-                    <span class="${innerClass}">
-                        ${hour.toString().padStart(2, '0')}:00
-                    </span>
-                </div>`;
-        }
-        bodyHtml += `</div>`;
-
-        // day columns
-        days.forEach(day => {
-            bodyHtml += `<div class="relative timetable-cell ${borderColor}" data-day="${day}"></div>`;
-        });
-
-        // dashed lines
-        for (let hour = minHour; hour < maxHour; hour++) {
-            const lineTop = (hour - minHour) * hourHeight;
-            bodyHtml += `<div class="absolute left-0 right-0 border-b border-dashed ${borderColor} z-0" style="top:${lineTop}px; grid-column:1 / -1;"></div>`;
-        }
-
-        bodyHtml += '</div>';
-
-        ttbContentLayer.innerHTML = headerHtml + bodyHtml;
-
-        // shift
-        const shiftVal = parseInt(ttbShiftInput.value, 10) || 0;
-        ttbContentLayer.style.transform = `translateY(${shiftVal}px)`;
-
-        // course blocks
-        parsedCourses.forEach((course, index) => {
-            const dayContainer = ttbContentLayer.querySelector(`[data-day="${course.day}"]`);
-            if (!dayContainer) return;
-
-            const [startH, startM] = course.startTime.split(':').map(Number);
-            const [endH_orig, endM_orig] = course.endTime.split(':').map(Number);
-
-            const endH_rounded = endM_orig > 0 ? endH_orig + 1 : endH_orig;
-            const minutesFromMin = (startH - minHour) * 60 + startM;
-            const top = (minutesFromMin / 60) * hourHeight;
-            const durationMinutes = (endH_rounded * 60) - (startH * 60 + startM);
-            const height = (durationMinutes / 60) * hourHeight;
-
-            if (top < 0 || top + height > coreHeight) return;
-
-            const courseBlock = document.createElement('div');
-            courseBlock.className = 'absolute w-full p-2 rounded-lg border text-xs overflow-hidden flex flex-col items-center justify-center z-10';
-            courseBlock.style.top = `${top + 1}px`;
-            courseBlock.style.height = `${height - 2}px`;
-            courseBlock.style.left = '0px';
-            courseBlock.style.fontSize = currentFontSize + 'px';
-            courseBlock.style.lineHeight = currentLineHeight;
-
-            const color = courseColors.get(course.title);
-            const courseTextColor = getContrastTextColor(color);
-            const extraInfo = additionalInfo.get(index) || '';
-            const extraInfoHtml = extraInfo ? `<p class="font-semibold mt-1">${extraInfo}</p>` : '';
-
-            courseBlock.style.backgroundColor = color;
-            courseBlock.style.borderColor = 'rgba(0,0,0,0.1)';
-            courseBlock.classList.add(courseTextColor);
-
-            const titleHtml = `<p class="course-title">${course.title} ${course.type ? `(${course.type})` : ''}</p>`;
-            const locationHtml = `<p>${course.room}</p>`;
-            const timeHtml = `<p class="opacity-80">${showTimes ? `${course.startTime} - ${course.endTime}` : ''}</p>`;
-
-            let innerHtml = '';
-            if (notePosition === 'above') {
-                innerHtml = `${extraInfoHtml} ${titleHtml} ${locationHtml} ${timeHtml}`;
-            } else {
-                innerHtml = `${titleHtml} ${locationHtml} ${extraInfoHtml} ${timeHtml}`;
-            }
-
-            courseBlock.innerHTML = `<div class="text-center">${innerHtml}</div>`;
-            dayContainer.appendChild(courseBlock);
-        });
+        courseBlock.innerHTML = `<div class="text-center">${innerHtml}</div>`;
+        dayContainer.appendChild(courseBlock);
+      });
     }
 
     function setupCustomColorPickers() {
-        customColorPickers.innerHTML = '';
-        uniqueCourses.forEach((title, index) => {
-            const wrapperDiv = document.createElement('div');
-            wrapperDiv.className = 'flex items-center justify-between p-2 rounded-lg bg-gray-100';
-            const idSafeTitle = title.replace(/\s|[^a-zA-Z0-9]/g, '-');
-            wrapperDiv.innerHTML = `
-                <label for="color-${idSafeTitle}" class="text-sm truncate pr-2">${title}</label>
-                <input type="color" id="color-${idSafeTitle}" value="${palettes.default[index % palettes.default.length]}" class="w-8 h-8 rounded border-none bg-transparent cursor-pointer">
-            `;
-            customColorPickers.appendChild(wrapperDiv);
-            wrapperDiv.querySelector('input').addEventListener('input', () => {
-                if (colorPaletteSelect.value === 'custom') renderTimetable();
-            });
+      customColorPickers.innerHTML = "";
+      uniqueCourses = [...new Set(parsedCourses.map((c) => c.title))];
+
+      uniqueCourses.forEach((title, index) => {
+        const wrapperDiv = document.createElement("div");
+        wrapperDiv.className =
+          "flex items-center justify-between p-2 rounded-lg bg-gray-100";
+
+        const idSafeTitle = title.replace(/[^a-zA-Z0-9]/g, "-");
+        wrapperDiv.innerHTML = `
+          <label for="color-${idSafeTitle}" class="text-sm truncate pr-2" title="${title}">
+            ${title}
+          </label>
+          <input
+            type="color"
+            id="color-${idSafeTitle}"
+            value="${palettes.default[index % palettes.default.length]}"
+            class="w-8 h-8 rounded border-none bg-transparent cursor-pointer"
+          />
+        `;
+        customColorPickers.appendChild(wrapperDiv);
+
+        wrapperDiv.querySelector("input").addEventListener("input", () => {
+          if (colorPaletteSelect.value === "custom") {
+            renderTimetable();
+          }
         });
+      });
     }
 
     function setupAdditionalInfoInputs() {
-        additionalInfoInputs.innerHTML = '';
-        additionalInfoContainer.classList.remove('hidden');
-        parsedCourses.forEach((course, index) => {
-            const wrapperDiv = document.createElement('div');
-            wrapperDiv.className = 'flex items-center justify-between p-2 rounded-lg bg-gray-100';
-            const labelText = `${course.title} (${course.day} ${course.startTime})`;
-            wrapperDiv.innerHTML = `
-                <label for="info-${index}" class="text-sm truncate pr-2" title="${labelText}">${labelText}</label>
-                <input type="text" id="info-${index}" placeholder="Add a note..." class="text-sm p-1 w-24 rounded border-gray-300">
-            `;
-            additionalInfoInputs.appendChild(wrapperDiv);
-            const input = wrapperDiv.querySelector('input');
-            input.value = additionalInfo.get(index) || '';
-            input.addEventListener('input', (e) => {
-                additionalInfo.set(index, e.target.value);
-                renderTimetable();
-            });
+      additionalInfoInputs.innerHTML = "";
+      additionalInfoContainer.classList.remove("hidden");
+
+      parsedCourses.forEach((course, index) => {
+        const wrapperDiv = document.createElement("div");
+        wrapperDiv.className =
+          "flex items-center justify-between p-2 rounded-lg bg-gray-100";
+
+        const labelText = `${course.title} (${course.day} ${course.startTime})`;
+
+        wrapperDiv.innerHTML = `
+          <label for="info-${index}" class="text-sm truncate pr-2" title="${labelText}">
+            ${labelText}
+          </label>
+          <input
+            type="text"
+            id="info-${index}"
+            placeholder="Add a note..."
+            class="text-sm p-1 w-24 rounded border-gray-300"
+          />
+        `;
+
+        additionalInfoInputs.appendChild(wrapperDiv);
+        const input = wrapperDiv.querySelector("input");
+        input.value = additionalInfo.get(index) || "";
+        input.addEventListener("input", (e) => {
+          additionalInfo.set(index, e.target.value);
+          renderTimetable();
         });
+      });
     }
 
     function updateBgPosition() {
-        ttbBgLayer.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+      ttbBgLayer.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
     }
 
-    timetableContainer.addEventListener('mousedown', (e) => {
-        if (!bgEnabled || !bgImageDataUrl) return;
-        isDraggingBg = true;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        bgStartPosX = bgPosX;
-        bgStartPosY = bgPosY;
-        ttbBgLayer.style.pointerEvents = 'auto';
-        timetableContainer.classList.add('bg-draggable');
+    timetableContainer.addEventListener("mousedown", (e) => {
+      if (!bgEnabled || !bgImageDataUrl) return;
+      isDraggingBg = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      bgStartPosX = bgPosX;
+      bgStartPosY = bgPosY;
+      ttbBgLayer.style.pointerEvents = "auto";
+      timetableContainer.classList.add("bg-draggable");
     });
 
-    document.addEventListener('mousemove', (e) => {
-        if (!isDraggingBg) return;
-        const rect = timetableContainer.getBoundingClientRect();
-        const deltaX = e.clientX - dragStartX;
-        const deltaY = e.clientY - dragStartY;
-        const moveXPercent = (deltaX / rect.width) * 100;
-        const moveYPercent = (deltaY / rect.height) * 100;
-        bgPosX = bgStartPosX + moveXPercent;
-        bgPosY = bgStartPosY + moveYPercent;
-        bgPosX = Math.max(0, Math.min(100, bgPosX));
-        bgPosY = Math.max(0, Math.min(100, bgPosY));
-        updateBgPosition();
+    document.addEventListener("mousemove", (e) => {
+      if (!isDraggingBg) return;
+      const rect = timetableContainer.getBoundingClientRect();
+      const deltaX = e.clientX - dragStartX;
+      const deltaY = e.clientY - dragStartY;
+      const moveXPercent = (deltaX / rect.width) * 100;
+      const moveYPercent = (deltaY / rect.height) * 100;
+      bgPosX = bgStartPosX + moveXPercent;
+      bgPosY = bgStartPosY + moveYPercent;
+      bgPosX = Math.max(0, Math.min(100, bgPosX));
+      bgPosY = Math.max(0, Math.min(100, bgPosY));
+      updateBgPosition();
     });
 
-    document.addEventListener('mouseup', () => {
-        if (!isDraggingBg) return;
-        isDraggingBg = false;
-        ttbBgLayer.style.pointerEvents = 'none';
-        timetableContainer.classList.remove('bg-draggable');
+    document.addEventListener("mouseup", () => {
+      if (!isDraggingBg) return;
+      isDraggingBg = false;
+      ttbBgLayer.style.pointerEvents = "none";
+      timetableContainer.classList.remove("bg-draggable");
     });
 
-    generateBtn.addEventListener('click', () => {
-        let dataToParse = dataInput.value.trim();
-        if (dataToParse === '' || dataInput.classList.contains('text-gray-400')) {
-            dataToParse = placeholderData;
-        }
-        parsedCourses = parseTimetableData(dataToParse);
-        uniqueCourses = [...new Set(parsedCourses.map(c => c.title))];
+    generateBtn.addEventListener("click", () => {
+      let dataToParse = dataInput.value.trim();
+      if (!dataToParse) {
+        dataToParse = placeholderData;
+        dataInput.classList.add("text-gray-400");
+      }
+
+      parsedCourses = parseTimetableData(dataToParse);
+      uniqueCourses = [...new Set(parsedCourses.map((c) => c.title))];
+      setupCustomColorPickers();
+      setupAdditionalInfoInputs();
+
+      customColorsContainer.classList.toggle(
+        "hidden",
+        colorPaletteSelect.value !== "custom"
+      );
+
+      renderTimetable();
+    });
+
+    mobileDownloadBtn.addEventListener("click", () => {
+      if (!timetableContainer) return;
+
+      mobileDownloadBtn.textContent = "Downloading...";
+      mobileDownloadBtn.disabled = true;
+
+      html2canvas(timetableContainer, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: wrapper.classList.contains("timetable-dark")
+          ? "#111827"
+          : "#ffffff",
+        scrollX: 0,
+        scrollY: 0,
+      })
+        .then((canvas) => {
+          const link = document.createElement("a");
+          link.download = "TWCTimetable_9_16.png";
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+        })
+        .catch((err) => {
+          console.error("oops, something went wrong!", err);
+        })
+        .finally(() => {
+          mobileDownloadBtn.textContent = "Download 9:16 Image";
+          mobileDownloadBtn.disabled = false;
+        });
+    });
+
+    colorPaletteSelect.addEventListener("change", () => {
+      const isCustom = colorPaletteSelect.value === "custom";
+      customColorsContainer.classList.toggle("hidden", !isCustom);
+      if (isCustom) {
         setupCustomColorPickers();
-        setupAdditionalInfoInputs();
-        customColorsContainer.classList.toggle('hidden', colorPaletteSelect.value !== 'custom');
+      }
+      if (parsedCourses.length > 0) {
         renderTimetable();
+      }
     });
 
-    async function captureTimetable() {
-        if (!timetableContainer) return;
+    themeToggle.addEventListener("click", () => {
+      wrapper.classList.toggle("timetable-dark");
+      const isDark = wrapper.classList.contains("timetable-dark");
+      themeToggle.querySelector(".light-mode-icon").classList.toggle("hidden", isDark);
+      themeToggle.querySelector(".dark-mode-icon").classList.toggle("hidden", !isDark);
+      if (parsedCourses.length > 0) {
+        renderTimetable();
+      }
+    });
 
-        mobileDownloadBtn.textContent = 'Downloading...';
-        mobileDownloadBtn.disabled = true;
+    notePositionSelect.addEventListener("change", () => {
+      if (parsedCourses.length > 0) renderTimetable();
+    });
 
-        try {
-            if (document.fonts && document.fonts.ready) {
-                await document.fonts.ready;
-            }
+    showTimeToggle.addEventListener("change", () => {
+      if (parsedCourses.length > 0) renderTimetable();
+    });
 
-            const canvas = await html2canvas(timetableContainer, {
-                scale: 3,
-                useCORS: true,
-                backgroundColor: wrapper.classList.contains('timetable-dark') ? '#111827' : '#ffffff',
-                scrollX: 0,
-                scrollY: 0,
-                onclone: (clonedDoc) => {
-                    const clonedContainer = clonedDoc.getElementById('timetable-container');
-                    if (!clonedContainer) return;
+    customTimeToggle.addEventListener("change", () => {
+      timeRangeControls.classList.toggle("hidden", !customTimeToggle.checked);
+      if (parsedCourses.length > 0) {
+        renderTimetable();
+      }
+    });
 
-                    const all = clonedContainer.querySelectorAll('*');
-                    all.forEach(el => {
-                        const style = clonedDoc.defaultView.getComputedStyle(el);
-                        el.style.fontSize = style.fontSize;
-                        el.style.lineHeight = style.lineHeight;
-                        el.style.fontFamily = style.fontFamily;
-                        el.style.fontWeight = style.fontWeight;
-                    });
+    startTimeSelect.addEventListener("change", () => {
+      if (parsedCourses.length > 0 && customTimeToggle.checked) renderTimetable();
+    });
 
-                    const titles = clonedContainer.querySelectorAll('.course-title');
-                    titles.forEach(el => {
-                        const style = clonedDoc.defaultView.getComputedStyle(el);
-                        el.style.fontSize = style.fontSize;
-                        el.style.lineHeight = style.lineHeight;
-                        el.style.fontFamily = style.fontFamily;
-                        el.style.fontWeight = '400';
-                    });
-                }
-            });
+    endTimeSelect.addEventListener("change", () => {
+      if (parsedCourses.length > 0 && customTimeToggle.checked) renderTimetable();
+    });
 
-            const link = document.createElement('a');
-            link.download = 'TWC_Timetable_9_16.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        } catch (err) {
-            console.error('oops, something went wrong!', err);
-        } finally {
-            mobileDownloadBtn.textContent = 'Download 9:16 Image';
-            mobileDownloadBtn.disabled = false;
-        }
-    }
-
-    mobileDownloadBtn.addEventListener('click', captureTimetable);
-
-    colorPaletteSelect.addEventListener('change', () => {
-        const isCustom = colorPaletteSelect.value === 'custom';
-        customColorsContainer.classList.toggle('hidden', !isCustom);
-        if (isCustom) setupCustomColorPickers();
+    fontSizeInput.addEventListener("input", () => {
+      const val = parseFloat(fontSizeInput.value);
+      if (!isNaN(val)) {
+        currentFontSize = val;
         if (parsedCourses.length > 0) renderTimetable();
+      }
     });
 
-    themeToggle.addEventListener('click', () => {
-        wrapper.classList.toggle('timetable-dark');
-        const isDark = wrapper.classList.contains('timetable-dark');
-        themeToggle.querySelector('.light-mode-icon').classList.toggle('hidden', isDark);
-        themeToggle.querySelector('.dark-mode-icon').classList.toggle('hidden', !isDark);
+    hourHeightInput.addEventListener("input", () => {
+      const val = parseFloat(hourHeightInput.value);
+      if (!isNaN(val)) {
+        currentHourHeight = val;
         if (parsedCourses.length > 0) renderTimetable();
+      }
     });
 
-    notePositionSelect.addEventListener('change', () => {
+    ttbShiftInput.addEventListener("input", () => {
+      const shiftVal = parseInt(ttbShiftInput.value, 10) || 0;
+      ttbContentLayer.style.transform = `translateY(${shiftVal}px)`;
+    });
+
+    lineHeightInput.addEventListener("input", () => {
+      const val = parseFloat(lineHeightInput.value);
+      if (!isNaN(val)) {
+        currentLineHeight = val;
         if (parsedCourses.length > 0) renderTimetable();
+      }
     });
 
-    showTimeToggle.addEventListener('change', () => {
-        if (parsedCourses.length > 0) renderTimetable();
+    bgEnableCheckbox.addEventListener("change", () => {
+      bgEnabled = bgEnableCheckbox.checked;
+      if (!bgEnabled) {
+        ttbBgLayer.style.backgroundImage = "";
+        timetableContainer.classList.remove("bg-draggable");
+      } else if (bgImageDataUrl) {
+        ttbBgLayer.style.backgroundImage = `url(${bgImageDataUrl})`;
+        bgPosX = 50;
+        bgPosY = 50;
+        updateBgPosition();
+      }
     });
 
-    customTimeToggle.addEventListener('change', () => {
-        timeRangeControls.classList.toggle('hidden', !customTimeToggle.checked);
-        if (parsedCourses.length > 0) renderTimetable();
-    });
-
-    startTimeSelect.addEventListener('change', () => {
-        if (parsedCourses.length > 0 && customTimeToggle.checked) renderTimetable();
-    });
-
-    endTimeSelect.addEventListener('change', () => {
-        if (parsedCourses.length > 0 && customTimeToggle.checked) renderTimetable();
-    });
-
-    fontSizeInput.addEventListener('input', () => {
-        const val = parseFloat(fontSizeInput.value);
-        if (!isNaN(val)) {
-            currentFontSize = val;
-            if (parsedCourses.length > 0) renderTimetable();
-        }
-    });
-
-    hourHeightInput.addEventListener('input', () => {
-        const val = parseFloat(hourHeightInput.value);
-        if (!isNaN(val)) {
-            currentHourHeight = val;
-            if (parsedCourses.length > 0) renderTimetable();
-        }
-    });
-
-    ttbShiftInput.addEventListener('input', () => {
-        const shiftVal = parseInt(ttbShiftInput.value, 10) || 0;
-        ttbContentLayer.style.transform = `translateY(${shiftVal}px)`;
-    });
-
-    lineHeightInput.addEventListener('input', () => {
-        const val = parseFloat(lineHeightInput.value);
-        if (!isNaN(val)) {
-            currentLineHeight = val;
-            if (parsedCourses.length > 0) renderTimetable();
-        }
-    });
-
-    bgEnableCheckbox.addEventListener('change', () => {
-        bgEnabled = bgEnableCheckbox.checked;
+    bgImageInput.addEventListener("change", () => {
+      const file = bgImageInput.files && bgImageInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        bgImageDataUrl = e.target.result;
         if (!bgEnabled) {
-            ttbBgLayer.style.backgroundImage = '';
-            timetableContainer.classList.remove('bg-draggable');
-        } else {
-            if (bgImageDataUrl) {
-                ttbBgLayer.style.backgroundImage = `url('${bgImageDataUrl}')`;
-                updateBgPosition();
-            }
+          bgEnableCheckbox.checked = true;
+          bgEnabled = true;
         }
+        ttbBgLayer.style.backgroundImage = `url(${bgImageDataUrl})`;
+        bgPosX = 50;
+        bgPosY = 50;
+        updateBgPosition();
+      };
+      reader.readAsDataURL(file);
     });
 
-    bgImageInput.addEventListener('change', () => {
-        const file = bgImageInput.files && bgImageInput.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            bgImageDataUrl = e.target.result;
-            if (!bgEnabled) bgEnableCheckbox.checked = bgEnabled = true;
-            ttbBgLayer.style.backgroundImage = `url('${bgImageDataUrl}')`;
-            bgPosX = 50;
-            bgPosY = 50;
-            updateBgPosition();
-        };
-        reader.readAsDataURL(file);
+    bgOpacityInput.addEventListener("input", () => {
+      const val = parseFloat(bgOpacityInput.value);
+      ttbBgLayer.style.opacity = isNaN(val) ? 0.3 : val;
     });
 
-    bgOpacityInput.addEventListener('input', () => {
-        const val = parseFloat(bgOpacityInput.value);
-        ttbBgLayer.style.opacity = isNaN(val) ? 0.3 : val;
+    bgSizeInput.addEventListener("input", () => {
+      const val = parseInt(bgSizeInput.value, 10);
+      const size = isNaN(val) ? 100 : val;
+      ttbBgLayer.style.backgroundSize = `${size}%`;
     });
 
-    bgSizeInput.addEventListener('input', () => {
-        const val = parseInt(bgSizeInput.value, 10);
-        const size = isNaN(val) ? 100 : val;
-        ttbBgLayer.style.backgroundSize = size + '%';
-    });
-
-    timeWhiteBgCheckbox.addEventListener('change', () => {
-        if (parsedCourses.length > 0) renderTimetable();
-    });
-
-    if (dataInput.value.trim() === '') {
-        dataInput.value = placeholderData.trim();
-        dataInput.classList.add('text-gray-400');
+    if (!dataInput.value.trim()) {
+      dataInput.value = placeholderData.trim();
+      dataInput.classList.add("text-gray-400");
     }
 
-    dataInput.addEventListener('focus', () => {
-        if (dataInput.classList.contains('text-gray-400')) {
-            dataInput.value = '';
-            dataInput.classList.remove('text-gray-400');
-        }
+    dataInput.addEventListener("focus", () => {
+      if (dataInput.classList.contains("text-gray-400")) {
+        dataInput.value = "";
+        dataInput.classList.remove("text-gray-400");
+      }
     });
 
-    dataInput.addEventListener('blur', () => {
-        if (dataInput.value.trim() === '') {
-            dataInput.value = placeholderData.trim();
-            dataInput.classList.add('text-gray-400');
-        }
+    dataInput.addEventListener("blur", () => {
+      if (!dataInput.value.trim()) {
+        dataInput.value = placeholderData.trim();
+        dataInput.classList.add("text-gray-400");
+      }
     });
-</script>
+  </script>
 </body>
 </html>
