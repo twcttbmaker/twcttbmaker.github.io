@@ -306,7 +306,7 @@
     const mobileDownloadBtn = document.getElementById('mobile-download-btn');
     const dataInput = document.getElementById('timetable-data');
     const timetableContainer = document.getElementById('timetable-container');
-    const previewWrapper = document.getElementById('preview-9-16-wrapper');
+    const wrapper = document.getElementById('preview-9-16-wrapper');
 
     const ttbBgLayer = document.getElementById('ttb-bg-layer');
     const ttbContentLayer = document.getElementById('ttb-content-layer');
@@ -552,11 +552,12 @@ REGISTERED
         const maxHour = parseInt(maxTime.split(':')[0]);
 
         const hourHeight = currentHourHeight;
-        const isTimetableDark = previewWrapper.classList.contains('timetable-dark');
+        const isTimetableDark = wrapper.classList.contains('timetable-dark');
         const showTimes = showTimeToggle.checked;
         const notePosition = notePositionSelect.value;
 
-        previewWrapper.style.backgroundColor = isTimetableDark ? '#111827' : '#ffffff';
+        // wrapper & container 背景
+        wrapper.style.backgroundColor = isTimetableDark ? '#111827' : '#ffffff';
         timetableContainer.style.backgroundColor = isTimetableDark ? '#111827' : '#ffffff';
 
         const headerBg = 'bg-transparent';
@@ -570,6 +571,7 @@ REGISTERED
         const coreHeight = (maxHour - minHour) * hourHeight;
 
         let headerHtml = `<div class="grid sticky top-0 ${headerBg} ${textColor} z-20 border-b ${borderColor}" style="${gridTemplateColumns}; line-height:${currentLineHeight};">`;
+        // Time header cell
         headerHtml += `<div class="p-2 font-semibold text-center ${borderColor} border-r" style="font-size:${currentFontSize}px;">
             <span class="time-label-inner${timeWhiteBgCheckbox.checked ? ' white-bg' : ''}">Time</span>
         </div>`;
@@ -587,7 +589,7 @@ REGISTERED
         for (let hour = minHour; hour < maxHour; hour++) {
             const innerClass = timeWhiteBgCheckbox.checked ? 'time-label-inner white-bg' : 'time-label-inner';
             bodyHtml += `
-                <div class="text-center text-sm ${timeColor} pt-1 border-r ${borderColor}" style="height:${hourHeight}px;font-size:${currentFontSize}px;">
+                <div class="text-center text-sm ${timeColor} pt-1 border-right border-r ${borderColor}" style="height:${hourHeight}px;font-size:${currentFontSize}px;">
                     <span class="${innerClass}">
                         ${hour.toString().padStart(2, '0')}:00
                     </span>
@@ -750,34 +752,53 @@ REGISTERED
         renderTimetable();
     });
 
-    // ★ 直接截 preview-9-16-wrapper ★
-    mobileDownloadBtn.addEventListener('click', async () => {
-        if (!previewWrapper) return;
+    // 等字體載入完成 + inline style 再截圖，減少字體走樣
+    async function captureTimetable() {
+        if (!timetableContainer) return;
+
         mobileDownloadBtn.textContent = 'Downloading...';
         mobileDownloadBtn.disabled = true;
 
         try {
+            // 等字體 ready
             if (document.fonts && document.fonts.ready) {
                 await document.fonts.ready;
             }
-            const canvas = await html2canvas(previewWrapper, {
+
+            const canvas = await html2canvas(timetableContainer, {
                 scale: 3,
                 useCORS: true,
-                backgroundColor: previewWrapper.classList.contains('timetable-dark') ? '#111827' : '#ffffff',
+                backgroundColor: wrapper.classList.contains('timetable-dark') ? '#111827' : '#ffffff',
                 scrollX: 0,
-                scrollY: 0
+                scrollY: 0,
+                // 將 timetable 內所有元素嘅計算樣式寫成 inline
+                onclone: (clonedDoc) => {
+                    const clonedContainer = clonedDoc.getElementById('timetable-container');
+                    if (!clonedContainer) return;
+                    const all = clonedContainer.querySelectorAll('*');
+                    all.forEach(el => {
+                        const style = clonedDoc.defaultView.getComputedStyle(el);
+                        el.style.fontSize = style.fontSize;
+                        el.style.lineHeight = style.lineHeight;
+                        el.style.fontFamily = style.fontFamily;
+                        el.style.fontWeight = style.fontWeight;
+                    });
+                }
             });
+
             const link = document.createElement('a');
             link.download = 'TWC_Timetable_9_16.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
-        } catch (e) {
-            console.error('oops, something went wrong!', e);
+        } catch (err) {
+            console.error('oops, something went wrong!', err);
         } finally {
             mobileDownloadBtn.textContent = 'Download 9:16 Image';
             mobileDownloadBtn.disabled = false;
         }
-    });
+    }
+
+    mobileDownloadBtn.addEventListener('click', captureTimetable);
 
     colorPaletteSelect.addEventListener('change', () => {
         const isCustom = colorPaletteSelect.value === 'custom';
@@ -787,8 +808,8 @@ REGISTERED
     });
 
     themeToggle.addEventListener('click', () => {
-        previewWrapper.classList.toggle('timetable-dark');
-        const isDark = previewWrapper.classList.contains('timetable-dark');
+        wrapper.classList.toggle('timetable-dark');
+        const isDark = wrapper.classList.contains('timetable-dark');
         themeToggle.querySelector('.light-mode-icon').classList.toggle('hidden', isDark);
         themeToggle.querySelector('.dark-mode-icon').classList.toggle('hidden', !isDark);
         if (parsedCourses.length > 0) renderTimetable();
