@@ -42,9 +42,32 @@
             border-right: 1px solid;
             border-bottom: 1px solid;
         }
+        /* 9:16 預覽容器 */
+        #preview-9-16-wrapper {
+            position: relative;
+            margin: 0 auto;
+            height: 70vh;
+            max-height: 900px;
+            width: calc(70vh * 9 / 16);
+            max-width: 450px;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        @media (min-height: 900px) {
+            #preview-9-16-wrapper {
+                height: 900px;
+                width: calc(900px * 9 / 16);
+            }
+        }
         #timetable-container {
             position: relative;
             transform-origin: left top;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: #ffffff;
         }
         #ttb-bg-layer {
             position: absolute;
@@ -192,19 +215,19 @@
                 <!-- Download 按鈕 -->
                 <div class="mt-6 grid grid-cols-1 gap-4">
                     <button id="mobile-download-btn" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-                        Generate Mobile Size Image
+                        Download 9:16 Image
                     </button>
                 </div>
 
-                <!-- 字體 / Hour Height / 背景圖設定 / time label 背景 -->
+                <!-- 字體 / Hour Height / 背景圖設定 / time label 背景 / ttb 下移 / 行距 -->
                 <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
                         <label for="font-size-input" class="text-sm font-medium">Font Size (px)</label>
-                        <input id="font-size-input" type="number" min="8" max="32" value="12" step="1" class="w-20 p-1 border border-gray-300 rounded-lg text-right">
+                        <input id="font-size-input" type="number" value="6" step="1" class="w-24 p-1 border border-gray-300 rounded-lg text-right">
                     </div>
                     <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100">
                         <label for="hour-height-input" class="text-sm font-medium">Hour Height (px)</label>
-                        <input id="hour-height-input" type="number" min="60" max="260" value="100" step="10" class="w-20 p-1 border border-gray-300 rounded-lg text-right">
+                        <input id="hour-height-input" type="number" value="60" step="10" class="w-24 p-1 border border-gray-300 rounded-lg text-right">
                     </div>
 
                     <!-- 背景圖片控制 -->
@@ -236,28 +259,46 @@
                             <label for="time-white-bg-checkbox" class="text-sm font-medium">White background for time labels (10:00, 11:00, ...)</label>
                         </div>
                     </div>
+
+                    <!-- 整個 timetable 下移 slider（預設約 45%） -->
+                    <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
+                        <div>
+                            <p class="text-sm font-medium">Shift timetable downward</p>
+                            <p class="text-xs text-gray-500">Move the whole timetable down inside the 9:16 preview.</p>
+                        </div>
+                        <input id="ttb-shift-input" type="range" min="-200" max="400" value="140" step="5" class="w-40">
+                    </div>
+
+                    <!-- 行距控制 -->
+                    <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
+                        <div>
+                            <p class="text-sm font-medium">Line spacing</p>
+                            <p class="text-xs text-gray-500">Control text line-height inside timetable.</p>
+                        </div>
+                        <input id="line-height-input" type="range" min="0.8" max="2.0" step="0.05" value="1.1" class="w-40">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 右欄：預覽 -->
-        <div class="lg:w-1/2">
-            <div id="timetable-container-wrapper" class="w-full overflow-auto bg-white p-4 rounded-2xl shadow-lg transition-colors duration-300">
-                <div id="timetable-container" class="min-w-[720px]">
+        <!-- 右欄：9:16 預覽 -->
+        <div class="lg:w-1/2 flex justify-center items-start">
+            <div id="preview-9-16-wrapper" class="transition-colors duration-300">
+                <div id="timetable-container">
                     <div id="ttb-bg-layer" style="opacity:0.3;"></div>
-                    <div id="ttb-content-layer">
-                        <div class="flex justify-center items-center h-96 text-gray-400">
+                    <div id="ttb-content-layer" style="transform: translateY(140px);">
+                        <div class="flex justify-center items-center h-full text-gray-400">
                             <p>Your timetable will be displayed here.</p>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <footer class="text-center mt-8 text-sm text-gray-500">
-                <p>&copy; David Cheng | Contact: twccredittransfer@gmail.com</p>
-            </footer>
         </div>
     </div>
+
+    <footer class="text-center mt-8 text-sm text-gray-500">
+        <p>&copy; David Cheng | Contact: twccredittransfer@gmail.com</p>
+    </footer>
 </div>
 
 <script>
@@ -265,7 +306,7 @@
     const mobileDownloadBtn = document.getElementById('mobile-download-btn');
     const dataInput = document.getElementById('timetable-data');
     const timetableContainer = document.getElementById('timetable-container');
-    const wrapper = document.getElementById('timetable-container-wrapper');
+    const wrapper = document.getElementById('preview-9-16-wrapper');
 
     const ttbBgLayer = document.getElementById('ttb-bg-layer');
     const ttbContentLayer = document.getElementById('ttb-content-layer');
@@ -292,14 +333,17 @@
     const bgSizeInput = document.getElementById('bg-size-input');
 
     const timeWhiteBgCheckbox = document.getElementById('time-white-bg-checkbox');
+    const ttbShiftInput = document.getElementById('ttb-shift-input');
+    const lineHeightInput = document.getElementById('line-height-input');
 
     let parsedCourses = [];
     let courseColors = new Map();
     let uniqueCourses = [];
     let additionalInfo = new Map();
 
-    let currentFontSize = 12;
-    let currentHourHeight = 100;
+    let currentFontSize = 6;
+    let currentHourHeight = 60;
+    let currentLineHeight = 1.1;
 
     let bgEnabled = false;
     let bgPosX = 50;
@@ -475,10 +519,10 @@ REGISTERED
         });
     }
 
-    function renderTimetable(isMobile = false) {
+    function renderTimetable() {
         if (parsedCourses.length === 0) {
             ttbContentLayer.innerHTML = `
-                <div class="flex justify-center items-center h-96 text-gray-400">
+                <div class="flex justify-center items-center h-full text-gray-400">
                     <p>No valid course data found. Please check your input.</p>
                 </div>`;
             mobileDownloadBtn.disabled = true;
@@ -512,29 +556,33 @@ REGISTERED
         const showTimes = showTimeToggle.checked;
         const notePosition = notePositionSelect.value;
 
-        wrapper.style.backgroundColor = isTimetableDark ? '#1f2937' : '#ffffff';
+        // wrapper & container 背景
+        wrapper.style.backgroundColor = isTimetableDark ? '#111827' : '#ffffff';
+        timetableContainer.style.backgroundColor = isTimetableDark ? '#111827' : '#ffffff';
 
-        const headerBg = isTimetableDark ? 'bg-gray-800/80' : 'bg-white/80';
-        const textColor = isTimetableDark ? 'text-gray-200' : 'text-gray-800';
-        const timeColor = isTimetableDark ? 'text-gray-400' : 'text-gray-500';
-        const borderColor = isTimetableDark ? 'border-gray-700/70' : 'border-gray-200/80';
+        const headerBg = isTimetableDark ? 'bg-transparent' : 'bg-transparent';
+        const textColor = isTimetableDark ? 'text-gray-100' : 'text-gray-900';
+        const timeColor = isTimetableDark ? 'text-gray-300' : 'text-gray-600';
+        const borderColor = isTimetableDark ? 'border-gray-600/80' : 'border-gray-300/80';
 
-        const timeColumnWidth = '80px';
+        const timeColumnWidth = '60px';
         const gridTemplateColumns = `grid-template-columns: ${timeColumnWidth} repeat(${days.length}, minmax(0, 1fr));`;
-
-        timetableContainer.style.width = '100%';
-        wrapper.style.minWidth = '720px';
 
         const coreHeight = (maxHour - minHour) * hourHeight;
 
-        let headerHtml = `<div class="grid sticky top-0 ${headerBg} ${textColor} z-20 border-b ${borderColor}" style="${gridTemplateColumns}">`;
-        headerHtml += `<div class="p-2 font-semibold text-center ${borderColor} border-r" style="font-size:${currentFontSize}px;">Time</div>`;
+        let headerHtml = `<div class="grid sticky top-0 ${headerBg} ${textColor} z-20 border-b ${borderColor}" style="${gridTemplateColumns}; line-height:${currentLineHeight};">`;
+        // Time header cell，跟時間欄相同 style（透明、只文字）
+        headerHtml += `<div class="p-2 font-semibold text-center ${borderColor} border-r" style="font-size:${currentFontSize}px;">
+            <span class="time-label-inner${timeWhiteBgCheckbox.checked ? ' white-bg' : ''}">Time</span>
+        </div>`;
         days.forEach(day => {
-            headerHtml += `<div class="p-2 font-semibold text-center border-l ${borderColor}" style="font-size:${currentFontSize}px;">${day}</div>`;
+            headerHtml += `<div class="p-2 font-semibold text-center border-l ${borderColor}" style="font-size:${currentFontSize}px;">
+                <span class="time-label-inner${timeWhiteBgCheckbox.checked ? ' white-bg' : ''}">${day}</span>
+            </div>`;
         });
         headerHtml += '</div>';
 
-        let bodyHtml = `<div class="relative grid" style="${gridTemplateColumns} height:${coreHeight}px;">`;
+        let bodyHtml = `<div class="relative grid" style="${gridTemplateColumns}; height:${coreHeight}px; line-height:${currentLineHeight};">`;
 
         // time column
         bodyHtml += `<div class="relative">`;
@@ -564,6 +612,10 @@ REGISTERED
 
         ttbContentLayer.innerHTML = headerHtml + bodyHtml;
 
+        // shift 整個 timetable 向下
+        const shiftVal = parseInt(ttbShiftInput.value, 10) || 0;
+        ttbContentLayer.style.transform = `translateY(${shiftVal}px)`;
+
         // course blocks
         parsedCourses.forEach((course, index) => {
             const dayContainer = ttbContentLayer.querySelector(`[data-day="${course.day}"]`);
@@ -586,6 +638,7 @@ REGISTERED
             courseBlock.style.height = `${height - 2}px`;
             courseBlock.style.left = '0px';
             courseBlock.style.fontSize = currentFontSize + 'px';
+            courseBlock.style.lineHeight = currentLineHeight;
 
             const color = courseColors.get(course.title);
             const courseTextColor = getContrastTextColor(color);
@@ -692,6 +745,7 @@ REGISTERED
             dataToParse = placeholderData;
         }
         parsedCourses = parseTimetableData(dataToParse);
+        uniqueCourses = [...new Set(parsedCourses.map(c => c.title))];
         setupCustomColorPickers();
         setupAdditionalInfoInputs();
         customColorsContainer.classList.toggle('hidden', colorPaletteSelect.value !== 'custom');
@@ -706,31 +760,18 @@ REGISTERED
         html2canvas(timetableContainer, {
             scale: 3,
             useCORS: true,
-            backgroundColor: wrapper.classList.contains('timetable-dark') ? '#1f2937' : '#ffffff'
+            backgroundColor: wrapper.classList.contains('timetable-dark') ? '#111827' : '#ffffff',
+            scrollX: 0,
+            scrollY: 0
         }).then(canvas => {
-            const finalCanvas = document.createElement('canvas');
-            const finalContext = finalCanvas.getContext('2d');
-            finalCanvas.width = 1080;
-            finalCanvas.height = 1920;
-
-            finalContext.fillStyle = wrapper.classList.contains('timetable-dark') ? '#1f2937' : '#ffffff';
-            finalContext.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
-            const drawWidth = finalCanvas.width * 0.9;
-            const drawHeight = (canvas.height / canvas.width) * drawWidth;
-            const drawX = (finalCanvas.width - drawWidth) / 2;
-            const drawY = (finalCanvas.height - drawHeight) / 2;
-
-            finalContext.drawImage(canvas, drawX, drawY, drawWidth, drawHeight);
-
             const link = document.createElement('a');
-            link.download = 'TWC_Timetable_Mobile.png';
-            link.href = finalCanvas.toDataURL('image/png');
+            link.download = 'TWC_Timetable_9_16.png';
+            link.href = canvas.toDataURL('image/png');
             link.click();
         }).catch(err => {
             console.error('oops, something went wrong!', err);
         }).finally(() => {
-            mobileDownloadBtn.textContent = 'Generate Mobile Size Image';
+            mobileDownloadBtn.textContent = 'Download 9:16 Image';
             mobileDownloadBtn.disabled = false;
         });
     });
@@ -772,17 +813,30 @@ REGISTERED
     });
 
     fontSizeInput.addEventListener('input', () => {
-        const val = parseInt(fontSizeInput.value, 10);
-        if (!isNaN(val) && val >= 8 && val <= 32) {
+        const val = parseFloat(fontSizeInput.value);
+        if (!isNaN(val)) {
             currentFontSize = val;
             if (parsedCourses.length > 0) renderTimetable();
         }
     });
 
     hourHeightInput.addEventListener('input', () => {
-        const val = parseInt(hourHeightInput.value, 10);
-        if (!isNaN(val) && val >= 60 && val <= 260) {
+        const val = parseFloat(hourHeightInput.value);
+        if (!isNaN(val)) {
             currentHourHeight = val;
+            if (parsedCourses.length > 0) renderTimetable();
+        }
+    });
+
+    ttbShiftInput.addEventListener('input', () => {
+        const shiftVal = parseInt(ttbShiftInput.value, 10) || 0;
+        ttbContentLayer.style.transform = `translateY(${shiftVal}px)`;
+    });
+
+    lineHeightInput.addEventListener('input', () => {
+        const val = parseFloat(lineHeightInput.value);
+        if (!isNaN(val)) {
+            currentLineHeight = val;
             if (parsedCourses.length > 0) renderTimetable();
         }
     });
