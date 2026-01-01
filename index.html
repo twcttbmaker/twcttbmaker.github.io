@@ -163,7 +163,7 @@
                   class="text-blue-600 hover:underline"
                   >Self-Service</a
                 >
-                &gt; List mode &gt; Ctrl+A &gt; Ctrl+C &gt; Paste below
+                &gt; My Schedule &gt; Ctrl+A &gt; Ctrl+C &gt; Paste below
               </p>
               <textarea
                 id="timetable-data"
@@ -322,7 +322,7 @@
 
               <!-- Background controls -->
               <div class="flex flex-col gap-2 p-3 rounded-lg bg-gray-100 md:col-span-2">
-                <div class="flex items中心 justify-between">
+                <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
                     <input
                       id="bg-enable-checkbox"
@@ -594,88 +594,28 @@
       ],
     };
 
-    const placeholderData = `Course Title: Imaging Anatomy
-Credits: 0.0
-Credit type: Letter Grade
-1000 - 1150 FRI
-Tung Wah College, Kings Park Campus, KPC-9079F
+    const placeholderData = `Course Title: Introduction to Health Informatics | Credits: 0.0 | Credit type: Letter Grade
+14:00 - 14:50
+FRI
+Tung Wah College, Mong Kok Campus, MKA-A801
 REGISTERED
 
-Course Title: Imaging Anatomy
-Credits: 3.0
-Credit type: Letter Grade
-1700 - 1850 FRI
-Tung Wah College, Mong Kok Campus, MKA-HCLT2F
+Course Title: Introduction to Health Informatics | Credits: 3.0 | Credit type: Letter Grade
+10:00 - 11:50
+THU
+Tung Wah College, King's Park Campus, KPC-VCLT
 REGISTERED
 
-Course Title: Radiation Physics
-Credits: 3.0
-Credit type: Letter Grade
-1500 - 1650 TUE
-Tung Wah College, Mong Kok Campus, MKA-8018F
+Course Title: Pathophysiology | Credits: 0.0 | Credit type: Letter Grade
+12:00 - 12:50
+WED
+Tung Wah College, King's Park Campus, KPC-1104
 REGISTERED
 
-Course Title: Radiation Physics
-Credits: 0.0
-Credit type: Letter Grade
-1700 - 1750 TUE
-Tung Wah College, Mong Kok Campus, MKA-8018F
-REGISTERED
-
-Course Title: Medical Imaging Instrumentation
-Credits: 3.0
-Credit type: Letter Grade
-1800 - 2050 THU
-Tung Wah College, Mong Kok Campus, MKA-5015F
-REGISTERED
-
-Course Title: Medical Imaging Instrumentation
-Credits: 0.0
-Credit type: Letter Grade
-1800 - 1850 WED
-Tung Wah College, Mong Kok Campus, MKA-5015F
-REGISTERED
-
-Course Title: Medical Imaging Instrumentation
-Credits: 0.0
-Credit type: Letter Grade
-1200 - 1350 WED
-Tung Wah College, Kings Park Campus, KPC-1101/11F
-REGISTERED
-
-Course Title: General Pathology
-Credits: 3.0
-Credit type: Letter Grade
-1400 - 1550 FRI
-Tung Wah College, Mong Kok Campus, MKA-HCLT2F
-REGISTERED
-
-Course Title: General Pathology
-Credits: 0.0
-Credit type: Letter Grade
-1600 - 1650 FRI
-Tung Wah College, Mong Kok Campus, MKA-8018F
-REGISTERED
-
-Course Title: General Pathology
-Credits: 0.0
-Credit type: Letter Grade
-1400 - 1650 MON
-Tung Wah College, Kings Park Campus, KPC-1305/06/13F
-REGISTERED
-
-Course Title: Introduction to Statistics
-Credits: 0.0
-Credit type: Letter Grade
-1500 - 1650 THU
-Tung Wah College, Kings Park Campus, KPC-9059F
-REGISTERED
-
-Course Title: Introduction to Statistics
-Credits: 3.0
-Credit type: Letter Grade
-1800 - 1850 MON
-Tung Wah College, Mong Kok Campus, MKB-2012F
+Course Title: Pathophysiology | Credits: 3.0 | Credit type: Letter Grade
+09:00 - 10:50
+WED
+Tung Wah College, King's Park Campus, KPC-SLT1
 REGISTERED`;
 
     function populateTimeSelects() {
@@ -729,35 +669,60 @@ REGISTERED`;
     function parseTimetableData(data) {
       const courses = [];
       const entries = data.split("REGISTERED").filter((entry) => entry.trim());
+
       entries.forEach((entry) => {
-        const titleMatch = entry.match(/Course Title:\s*(.+)/);
-        const timeMatch = entry.match(/(\d{4})\s*-\s*(\d{4})\s*(MON|TUE|WED|THU|FRI|SAT)/);
-        const dayMatch = entry.match(/(MON|TUE|WED|THU|FRI|SAT)/);
-        const roomMatch = entry.match(/Campus,\s*([A-Z0-9\-\/]+)/);
+        // Course Title
+        const titleMatch = entry.match(/Course Title:\s*([^\|]+)/);
+        
+        // Time slots - match all HH:MM - HH:MM DAY patterns
+        const timeMatches = entry.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})\s+(MON|TUE|WED|THU|FRI|SAT)/g);
+        
+        // Room/Location
+        const roomMatch = entry.match(/Campus,\s*([A-Z0-9\-]+)/);
+        
+        // Type (optional)
         const typeMatch = entry.match(/(Lecture|Seminar|Laboratory)/i);
 
-        const typeMap = {
-          lecture: "LEC",
-          seminar: "SEM",
-          laboratory: "LAB",
-        };
-
-        let courseType = "";
-        if (typeMatch) {
-          courseType = typeMap[typeMatch[0].toLowerCase()] || "";
-        }
-
-        if (titleMatch && timeMatch && dayMatch && roomMatch) {
-          courses.push({
-            title: titleMatch[1].trim(),
-            startTime: timeMatch[1],
-            endTime: timeMatch[2],
-            day: dayMatch[1],
-            room: roomMatch[1],
-            type: courseType,
+        if (titleMatch && timeMatches && roomMatch) {
+          const courseTitle = titleMatch[1].trim();
+          
+          // Each time slot creates one course entry
+          timeMatches.forEach((timeStr) => {
+            const tm = timeStr.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})\s+(MON|TUE|WED|THU|FRI|SAT)/);
+            
+            if (tm) {
+              const startH = tm[1];
+              const startM = tm[2];
+              const endH = tm[3];
+              const endM = tm[4];
+              const day = tm[5];
+              
+              const startTime = `${startH}${startM}`;
+              const endTime = `${endH}${endM}`;
+              
+              let courseType = "";
+              if (typeMatch) {
+                const typeMap = {
+                  lecture: "LEC",
+                  seminar: "SEM",
+                  laboratory: "LAB",
+                };
+                courseType = typeMap[typeMatch[0].toLowerCase()] || "";
+              }
+              
+              courses.push({
+                title: courseTitle,
+                startTime: startTime,
+                endTime: endTime,
+                day: day,
+                room: roomMatch[1],
+                type: courseType,
+              });
+            }
           });
         }
       });
+
       return courses;
     }
 
@@ -874,7 +839,7 @@ REGISTERED`;
       for (let hour = minHour; hour < maxHour; hour++) {
         const label = `${hour.toString().padStart(2, "0")}00`;
         const showWhiteBgForThisHour =
-          whiteBgOn && (hour >= 10 && hour <= 22); // 1000–2200 左邊時間欄白底
+          whiteBgOn && (hour >= 10 && hour <= 22);
         bodyHtml += `
           <div class="text-center text-sm ${timeColor} pt-1 border-r ${borderColor}" 
                style="height:${hourHeight}px; font-size:${currentFontSize}px;">
@@ -891,7 +856,7 @@ REGISTERED`;
         bodyHtml += `<div class="relative timetable-cell ${borderColor}" data-day="${day}"></div>`;
       });
 
-      // dashed horizontal lines
+      // dashed lines
       for (let hour = minHour; hour < maxHour; hour++) {
         const lineTop = (hour - minHour) * hourHeight;
         bodyHtml += `
