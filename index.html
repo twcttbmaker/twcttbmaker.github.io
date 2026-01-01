@@ -922,7 +922,7 @@ REGISTERED`;
 
         const courseBlock = document.createElement("div");
         courseBlock.className =
-          "absolute w-full p-2 rounded-lg border overflow-hidden flex flex-col items-center justify-center z-10";
+          "absolute w-full p-2 rounded-lg border text-xs overflow-hidden flex flex-col items-center justify-center z-10";
         courseBlock.style.top = `${top + 1}px`;
         courseBlock.style.height = `${height - 2}px`;
         courseBlock.style.left = "0px";
@@ -1100,7 +1100,7 @@ REGISTERED`;
       })
         .then((canvas) => {
           const link = document.createElement("a");
-          link.download = "TWCTimetable_9_16.png";
+          link.download = "TWCTimetable916.png";
           link.href = canvas.toDataURL("image/png");
           link.click();
         })
