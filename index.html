@@ -17,7 +17,7 @@
     </script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #f3f4f6;
             color: #1f2937;
         }
@@ -90,6 +90,9 @@
             padding: 0 4px;
             border-radius: 4px;
             display: inline-block;
+        }
+        .course-title {
+            font-weight: 600;
         }
     </style>
 </head>
@@ -288,7 +291,7 @@
                     <div id="ttb-bg-layer" style="opacity:0.3;"></div>
                     <div id="ttb-content-layer" style="transform: translateY(140px);">
                         <div class="flex justify-center items-center h-full text-gray-400">
-                            <p>Your timetable will be displayed here.</p>
+                            <p>Your timetable will be displayed here。</p>
                         </div>
                     </div>
                 </div>
@@ -556,7 +559,6 @@ REGISTERED
         const showTimes = showTimeToggle.checked;
         const notePosition = notePositionSelect.value;
 
-        // wrapper & container 背景
         wrapper.style.backgroundColor = isTimetableDark ? '#111827' : '#ffffff';
         timetableContainer.style.backgroundColor = isTimetableDark ? '#111827' : '#ffffff';
 
@@ -571,7 +573,6 @@ REGISTERED
         const coreHeight = (maxHour - minHour) * hourHeight;
 
         let headerHtml = `<div class="grid sticky top-0 ${headerBg} ${textColor} z-20 border-b ${borderColor}" style="${gridTemplateColumns}; line-height:${currentLineHeight};">`;
-        // Time header cell
         headerHtml += `<div class="p-2 font-semibold text-center ${borderColor} border-r" style="font-size:${currentFontSize}px;">
             <span class="time-label-inner${timeWhiteBgCheckbox.checked ? ' white-bg' : ''}">Time</span>
         </div>`;
@@ -589,7 +590,7 @@ REGISTERED
         for (let hour = minHour; hour < maxHour; hour++) {
             const innerClass = timeWhiteBgCheckbox.checked ? 'time-label-inner white-bg' : 'time-label-inner';
             bodyHtml += `
-                <div class="text-center text-sm ${timeColor} pt-1 border-right border-r ${borderColor}" style="height:${hourHeight}px;font-size:${currentFontSize}px;">
+                <div class="text-center text-sm ${timeColor} pt-1 border-r ${borderColor}" style="height:${hourHeight}px;font-size:${currentFontSize}px;">
                     <span class="${innerClass}">
                         ${hour.toString().padStart(2, '0')}:00
                     </span>
@@ -612,7 +613,7 @@ REGISTERED
 
         ttbContentLayer.innerHTML = headerHtml + bodyHtml;
 
-        // shift 整個 timetable 向下
+        // shift
         const shiftVal = parseInt(ttbShiftInput.value, 10) || 0;
         ttbContentLayer.style.transform = `translateY(${shiftVal}px)`;
 
@@ -649,7 +650,7 @@ REGISTERED
             courseBlock.style.borderColor = 'rgba(0,0,0,0.1)';
             courseBlock.classList.add(courseTextColor);
 
-            const titleHtml = `<p class="font-bold">${course.title} ${course.type ? `(${course.type})` : ''}</p>`;
+            const titleHtml = `<p class="course-title">${course.title} ${course.type ? `(${course.type})` : ''}</p>`;
             const locationHtml = `<p>${course.room}</p>`;
             const timeHtml = `<p class="opacity-80">${showTimes ? `${course.startTime} - ${course.endTime}` : ''}</p>`;
 
@@ -752,7 +753,6 @@ REGISTERED
         renderTimetable();
     });
 
-    // 等字體載入完成 + inline style 再截圖，減少字體走樣
     async function captureTimetable() {
         if (!timetableContainer) return;
 
@@ -760,7 +760,6 @@ REGISTERED
         mobileDownloadBtn.disabled = true;
 
         try {
-            // 等字體 ready
             if (document.fonts && document.fonts.ready) {
                 await document.fonts.ready;
             }
@@ -771,10 +770,10 @@ REGISTERED
                 backgroundColor: wrapper.classList.contains('timetable-dark') ? '#111827' : '#ffffff',
                 scrollX: 0,
                 scrollY: 0,
-                // 將 timetable 內所有元素嘅計算樣式寫成 inline
                 onclone: (clonedDoc) => {
                     const clonedContainer = clonedDoc.getElementById('timetable-container');
                     if (!clonedContainer) return;
+
                     const all = clonedContainer.querySelectorAll('*');
                     all.forEach(el => {
                         const style = clonedDoc.defaultView.getComputedStyle(el);
@@ -782,6 +781,15 @@ REGISTERED
                         el.style.lineHeight = style.lineHeight;
                         el.style.fontFamily = style.fontFamily;
                         el.style.fontWeight = style.fontWeight;
+                    });
+
+                    const titles = clonedContainer.querySelectorAll('.course-title');
+                    titles.forEach(el => {
+                        const style = clonedDoc.defaultView.getComputedStyle(el);
+                        el.style.fontSize = style.fontSize;
+                        el.style.lineHeight = style.lineHeight;
+                        el.style.fontFamily = style.fontFamily;
+                        el.style.fontWeight = '600';
                     });
                 }
             });
