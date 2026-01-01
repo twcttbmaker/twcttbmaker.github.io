@@ -901,7 +901,10 @@ REGISTERED`;
         const dayContainer = ttbContentLayer.querySelector(`[data-day="${course.day}"]`);
         if (!dayContainer) return;
 
-        const [startH, startM] = [parseInt(course.startTime.slice(0, 2), 10), parseInt(course.startTime.slice(2), 10)];
+        const [startH, startM] = [
+          parseInt(course.startTime.slice(0, 2), 10),
+          parseInt(course.startTime.slice(2), 10),
+        ];
         const [endHorig, endMorig] = [
           parseInt(course.endTime.slice(0, 2), 10),
           parseInt(course.endTime.slice(2), 10),
@@ -931,7 +934,7 @@ REGISTERED`;
         const extraInfo = additionalInfo.get(index) || "";
 
         const extraInfoHtml = extraInfo
-          ? `<p class="font-semibold mt-1">${extraInfo}</p>`
+          ? `<p class="font-semibold mt-1" style="font-size:${currentFontSize}px;">${extraInfo}</p>`
           : "";
 
         courseBlock.style.backgroundColor = color || "#6b7280";
@@ -943,9 +946,9 @@ REGISTERED`;
             ${course.title}${course.type ? ` (${course.type})` : ""}
           </p>
         `;
-        const locationHtml = `<p>${course.room}</p>`;
+        const locationHtml = `<p style="font-size:${currentFontSize}px;">${course.room}</p>`;
         const timeHtml = showTimes
-          ? `<p class="opacity-80">${course.startTime} - ${course.endTime}</p>`
+          ? `<p class="opacity-80" style="font-size:${currentFontSize}px;">${course.startTime} - ${course.endTime}</p>`
           : "";
 
         let innerHtml = "";
