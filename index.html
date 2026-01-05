@@ -105,13 +105,6 @@
     .bg-draggable {
       cursor: move;
     }
-
-    .time-label-inner.white-bg {
-      background-color: #ffffff;
-      padding: 0 4px;
-      border-radius: 4px;
-      display: inline-block;
-    }
   </style>
 </head>
 
@@ -268,6 +261,17 @@
                     ></select>
                   </div>
                 </div>
+
+                <!-- Grid toggle -->
+                <div class="flex justify-between items-center p-3 rounded-lg bg-gray-100 col-span-1 md:col-span-2">
+                  <label for="grid-toggle" class="text-sm font-medium">Show grid (columns + lines)</label>
+                  <input
+                    type="checkbox"
+                    id="grid-toggle"
+                    class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                    checked
+                  />
+                </div>
               </div>
 
               <!-- custom palette -->
@@ -367,20 +371,6 @@
                 </p>
               </div>
 
-              <!-- Time label white bg -->
-              <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
-                <div class="flex items-center gap-2">
-                  <input
-                    id="time-white-bg-checkbox"
-                    type="checkbox"
-                    class="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-pointer"
-                  />
-                  <label for="time-white-bg-checkbox" class="text-sm font-medium">
-                    White background for time labels (1000, 1100, ...)
-                  </label>
-                </div>
-              </div>
-
               <!-- timetable slider -->
               <div class="flex items-center justify-between p-3 rounded-lg bg-gray-100 md:col-span-2">
                 <div>
@@ -471,6 +461,7 @@
     const timeRangeControls = document.getElementById("time-range-controls");
     const startTimeSelect = document.getElementById("start-time");
     const endTimeSelect = document.getElementById("end-time");
+    const gridToggle = document.getElementById("grid-toggle");
 
     const fontSizeInput = document.getElementById("font-size-input");
     const hourHeightInput = document.getElementById("hour-height-input");
@@ -478,7 +469,6 @@
     const bgImageInput = document.getElementById("bg-image-input");
     const bgOpacityInput = document.getElementById("bg-opacity-input");
     const bgSizeInput = document.getElementById("bg-size-input");
-    const timeWhiteBgCheckbox = document.getElementById("time-white-bg-checkbox");
     const ttbShiftInput = document.getElementById("ttb-shift-input");
     const lineHeightInput = document.getElementById("line-height-input");
 
@@ -594,28 +584,70 @@
       ],
     };
 
-    const placeholderData = `Course Title: Introduction to Health Informatics | Credits: 0.0 | Credit type: Letter Grade
-14:00 - 14:50
-FRI
-Tung Wah College, Mong Kok Campus, MKA-A801
-REGISTERED
-
-Course Title: Introduction to Health Informatics | Credits: 3.0 | Credit type: Letter Grade
+    const placeholderData = `Course Title: Imaging Anatomy | Credits: 0.0 | Credit type: Letter Grade
 10:00 - 11:50
+FRI
+Tung Wah College, King's Park Campus, KPC-907
+REGISTERED
+
+Course Title: Imaging Anatomy | Credits: 3.0 | Credit type: Letter Grade
+17:00 - 18:50
+FRI
+Tung Wah College, Mong Kok Campus, MKA-HCLT
+REGISTERED
+
+Course Title: Radiation Physics | Credits: 3.0 | Credit type: Letter Grade
+15:00 - 16:50
+TUE
+Tung Wah College, Mong Kok Campus, MKA-801
+REGISTERED
+
+Course Title: Radiation Physics | Credits: 0.0 | Credit type: Letter Grade
+17:00 - 17:50
+TUE
+Tung Wah College, Mong Kok Campus, MKA-801
+REGISTERED
+
+Course Title: Medical Imaging Instrumentation | Credits: 3.0 | Credit type: Letter Grade
+18:00 - 20:50
 THU
-Tung Wah College, King's Park Campus, KPC-VCLT
+Tung Wah College, Mong Kok Campus, MKA-501
 REGISTERED
 
-Course Title: Pathophysiology | Credits: 0.0 | Credit type: Letter Grade
-12:00 - 12:50
+Course Title: Medical Imaging Instrumentation | Credits: 0.0 | Credit type: Letter Grade
+12:00 - 13:50
 WED
-Tung Wah College, King's Park Campus, KPC-1104
+Tung Wah College, King's Park Campus, KPC-1101
 REGISTERED
 
-Course Title: Pathophysiology | Credits: 3.0 | Credit type: Letter Grade
-09:00 - 10:50
-WED
-Tung Wah College, King's Park Campus, KPC-SLT1
+Course Title: General Pathology | Credits: 3.0 | Credit type: Letter Grade
+14:00 - 15:50
+FRI
+Tung Wah College, Mong Kok Campus, MKA-HCLT
+REGISTERED
+
+Course Title: General Pathology | Credits: 0.0 | Credit type: Letter Grade
+16:00 - 16:50
+FRI
+Tung Wah College, Mong Kok Campus, MKA-801
+REGISTERED
+
+Course Title: General Pathology | Credits: 0.0 | Credit type: Letter Grade
+14:00 - 16:50
+MON
+Tung Wah College, King's Park Campus, KPC-130506
+REGISTERED
+
+Course Title: Introduction to Statistics | Credits: 0.0 | Credit type: Letter Grade
+15:00 - 16:50
+THU
+Tung Wah College, King's Park Campus, KPC-905
+REGISTERED
+
+Course Title: Introduction to Statistics | Credits: 3.0 | Credit type: Letter Grade
+18:00 - 18:50
+MON
+Tung Wah College, Mong Kok Campus, MKB-201
 REGISTERED`;
 
     function populateTimeSelects() {
@@ -671,35 +703,27 @@ REGISTERED`;
       const entries = data.split("REGISTERED").filter((entry) => entry.trim());
 
       entries.forEach((entry) => {
-        // Course Title
         const titleMatch = entry.match(/Course Title:\s*([^\|]+)/);
-        
-        // Time slots - match all HH:MM - HH:MM DAY patterns
         const timeMatches = entry.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})\s+(MON|TUE|WED|THU|FRI|SAT)/g);
-        
-        // Room/Location
-        const roomMatch = entry.match(/Campus,\s*([A-Z0-9\-]+)/);
-        
-        // Type (optional)
+        const roomMatch = entry.match(/Campus,\s*([A-Z0-9\-()\/]+)/);
         const typeMatch = entry.match(/(Lecture|Seminar|Laboratory)/i);
 
         if (titleMatch && timeMatches && roomMatch) {
           const courseTitle = titleMatch[1].trim();
-          
-          // Each time slot creates one course entry
+
           timeMatches.forEach((timeStr) => {
             const tm = timeStr.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})\s+(MON|TUE|WED|THU|FRI|SAT)/);
-            
+
             if (tm) {
               const startH = tm[1];
               const startM = tm[2];
               const endH = tm[3];
               const endM = tm[4];
               const day = tm[5];
-              
+
               const startTime = `${startH}${startM}`;
               const endTime = `${endH}${endM}`;
-              
+
               let courseType = "";
               if (typeMatch) {
                 const typeMap = {
@@ -709,7 +733,7 @@ REGISTERED`;
                 };
                 courseType = typeMap[typeMatch[0].toLowerCase()] || "";
               }
-              
+
               courses.push({
                 title: courseTitle,
                 startTime: startTime,
@@ -785,7 +809,7 @@ REGISTERED`;
       const isTimetableDark = wrapper.classList.contains("timetable-dark");
       const showTimes = showTimeToggle.checked;
       const notePosition = notePositionSelect.value;
-      const whiteBgOn = timeWhiteBgCheckbox.checked;
+      const showGrid = gridToggle.checked;
 
       wrapper.style.backgroundColor = isTimetableDark ? "#111827" : "#ffffff";
       timetableContainer.style.backgroundColor = isTimetableDark ? "#111827" : "#ffffff";
@@ -794,6 +818,7 @@ REGISTERED`;
       const textColor = isTimetableDark ? "text-gray-100" : "text-gray-900";
       const timeColor = isTimetableDark ? "text-gray-300" : "text-gray-600";
       const borderColor = isTimetableDark ? "border-gray-600/80" : "border-gray-300/80";
+      const noBorderClass = showGrid ? borderColor : "border-transparent";
 
       const timeColumnWidth = "60px";
       const gridTemplateColumns = `${timeColumnWidth} repeat(${days.length}, minmax(0, 1fr))`;
@@ -802,14 +827,14 @@ REGISTERED`;
 
       // header
       let headerHtml = `
-        <div class="grid sticky top-0 ${headerBg} ${textColor} z-20 border-b ${borderColor}" 
+        <div class="grid sticky top-0 ${headerBg} ${textColor} z-20 ${showGrid ? "border-b " + borderColor : ""}" 
              style="grid-template-columns: ${gridTemplateColumns}; line-height:${currentLineHeight};">
       `;
 
       headerHtml += `
-        <div class="p-2 font-semibold text-center ${borderColor} border-r" 
+        <div class="p-2 font-semibold text-center ${noBorderClass} border-r" 
              style="font-size:${currentFontSize}px;">
-          <span class="time-label-inner ${whiteBgOn ? "white-bg" : ""}">
+          <span>
             Time
           </span>
         </div>
@@ -817,9 +842,9 @@ REGISTERED`;
 
       days.forEach((day) => {
         headerHtml += `
-          <div class="p-2 font-semibold text-center border-l ${borderColor}"
+          <div class="p-2 font-semibold text-center border-l ${noBorderClass}"
                style="font-size:${currentFontSize}px;">
-            <span class="time-label-inner ${whiteBgOn ? "white-bg" : ""}">
+            <span>
               ${day}
             </span>
           </div>
@@ -835,17 +860,13 @@ REGISTERED`;
       `;
 
       // left time column
-      bodyHtml += `<div class="relative">`;
+      bodyHtml += `<div class="relative ${showGrid ? "border-r " + borderColor : ""}">`;
       for (let hour = minHour; hour < maxHour; hour++) {
         const label = `${hour.toString().padStart(2, "0")}00`;
-        const showWhiteBgForThisHour =
-          whiteBgOn && (hour >= 10 && hour <= 22);
         bodyHtml += `
-          <div class="text-center text-sm ${timeColor} pt-1 border-r ${borderColor}" 
+          <div class="text-center text-sm ${timeColor} pt-1 ${showGrid ? "border-b " + borderColor : ""}" 
                style="height:${hourHeight}px; font-size:${currentFontSize}px;">
-            <span class="time-label-inner ${showWhiteBgForThisHour ? "white-bg" : ""}">
-              ${label}
-            </span>
+            <span>${label}</span>
           </div>
         `;
       }
@@ -853,16 +874,18 @@ REGISTERED`;
 
       // day columns
       days.forEach((day) => {
-        bodyHtml += `<div class="relative timetable-cell ${borderColor}" data-day="${day}"></div>`;
+        bodyHtml += `<div class="relative ${showGrid ? "timetable-cell " + borderColor : ""}" data-day="${day}"></div>`;
       });
 
-      // dashed lines
-      for (let hour = minHour; hour < maxHour; hour++) {
-        const lineTop = (hour - minHour) * hourHeight;
-        bodyHtml += `
-          <div class="absolute left-0 right-0 border-b border-dashed ${borderColor} z-0"
-               style="top:${lineTop}px; grid-column:1 / -1;"></div>
-        `;
+      // dashed lines (grid)
+      if (showGrid) {
+        for (let hour = minHour; hour < maxHour; hour++) {
+          const lineTop = (hour - minHour) * hourHeight;
+          bodyHtml += `
+            <div class="absolute left-0 right-0 border-b border-dashed ${borderColor} z-0"
+                 style="top:${lineTop}px; grid-column:1 / -1;"></div>
+          `;
+        }
       }
 
       bodyHtml += `</div>`;
@@ -1132,6 +1155,10 @@ REGISTERED`;
 
     endTimeSelect.addEventListener("change", () => {
       if (parsedCourses.length > 0 && customTimeToggle.checked) renderTimetable();
+    });
+
+    gridToggle.addEventListener("change", () => {
+      if (parsedCourses.length > 0) renderTimetable();
     });
 
     fontSizeInput.addEventListener("input", () => {
